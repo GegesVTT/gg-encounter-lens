@@ -46,12 +46,42 @@ export function localizeReport(report) {
   };
 }
 
+/** Plan táctico → estructura lista para plantilla. */
+export function localizePlan(plan) {
+  const pair = (e) => ({
+    head: t(`${e.key}.head`, e.data),
+    body: t(`${e.key}.body`, e.data),
+  });
+  return {
+    empty: !!plan.empty,
+    rounds: (plan.rounds ?? []).map((r) => ({
+      n: r.n,
+      label: t("GGEL.plan.round", { n: r.n }),
+      entries: r.entries.map((e) => ({ ...pair(e), activation: e.activation ?? "action" })),
+    })),
+    contingencies: (plan.contingencies ?? []).map(pair),
+  };
+}
+
 /** Render de texto plano (consola / tests / copiar-pegar). */
-export function renderText(report) {
+export function renderText(report, plan = null) {
   const L = localizeReport(report);
   const line = (n) => `${n.icon}  ${n.head}\n     ${n.body}`;
   const body = L.notes.length
     ? L.notes.map(line).join("\n\n")
     : `${SEV_ICON.advantage}  ${L.verdict}`;
-  return `${body}\n\n${line(L.baseline)}`;
+  let out = `${body}\n\n${line(L.baseline)}`;
+
+  if (plan && !plan.empty) {
+    const P = localizePlan(plan);
+    for (const r of P.rounds) {
+      out += `\n\n── ${r.label} ──`;
+      for (const e of r.entries) out += `\n  • ${e.head}\n    ${e.body}`;
+    }
+    if (P.contingencies.length) {
+      out += `\n\n── ${t("GGEL.ui.contingencies")} ──`;
+      for (const c of P.contingencies) out += `\n  • ${c.head}\n    ${c.body}`;
+    }
+  }
+  return out;
 }

@@ -30,8 +30,33 @@ plain-language briefing of *mismatches* — colour-coded, not scored.
 | 3 | Reach & mobility | Can anyone touch a flyer or a shooter? |
 | 4 | Action economy | Are they outnumbered in actions per round? |
 | 5 | Defensive read | Who is the weak link, and how many hits until they drop? |
+| 6 | Soft spot | Is one save targeted by *several* monsters at once? |
 
+Save notes show each character's actual modifier and failure chance
+(`Bula +3 → 65%`) so the GM can audit any flag rather than take it on faith.
 The XP/CR baseline appears **as context only**, never as a verdict.
+
+## The combat plan
+
+Reading the mismatches is half the job; the other half is running the monsters
+like they mean it. The planner turns the same analysis into a round-by-round
+script — deterministic, no API key, no network:
+
+```
+── Round 1 ──
+  • Tyrant uses Paralysing Ray on Ofelia
+    CON DC 16: Ofelia fails 60%. Pure control — taking them out of the round
+    beats raw damage.
+  • Legendary action: Tail swipe
+── Contingencies ──
+  • Save Breath for when the Tyrant is bloodied
+  • If Ofelia drops, focus shifts to Gepeto
+```
+
+It scores every move by expected impact against *this* party, opens with control
+and closes with damage, respects recharge and limited uses, keeps legendary and
+lair actions on their own tracks, and adds contingencies for a bloodied monster,
+a fallen character and the party's softest save.
 
 ## Using it
 
@@ -69,6 +94,16 @@ reconstructs one as a fallback — and `bridge.mjs` feeds live actors through
 `actor.toObject()` plus derived values, so inside Foundry there is no estimation
 at all. Estimated values are flagged in the briefing when they do occur.
 
+### Two more data-model findings
+
+`activation.type` cleanly separates actions, bonus actions, legendary actions,
+lair actions and passive traits — the planner needs that split, because a lair
+action happens on initiative 20 and a passive trait is not a move at all.
+
+Activities are merged **per item**, not treated individually: a wraith's Life
+Drain is one attack roll *plus* a Constitution save on the same action, and
+scoring them as rival moves made the plan describe half an action.
+
 ### Known limitation
 
 Many monsters store the range of save-based effects only in prose — a beholder's
@@ -78,9 +113,10 @@ under-reports for those. Documented rather than papered over.
 ## Development
 
 ```bash
-node tests/run-all.mjs   # audit + engine + probe extraction + full pipeline
+node tests/run-all.mjs   # everything below, in order
 node tests/audit.mjs     # imports, i18n keys, templates, module.json coherence
 node tests/run.mjs       # synthetic fixtures: each rule in isolation
+node tests/tactics.mjs   # new checks + the combat planner
 node tests/probe.mjs     # extraction against real exported actors
 node tests/real.mjs      # full pipeline, both languages
 ```
@@ -90,10 +126,11 @@ themselves when it is absent, so CI stays green.
 
 ## Status
 
-**v0.1.0** — engine, extractor and panel complete; validated against real
-campaign data.
+**v0.2.0** — analysis and combat planning, validated against real campaign data.
 
-- [x] Analysis engine + five checks
+- [x] Analysis engine + six checks
+- [x] Per-character transparency on every save flag
+- [x] Deterministic combat plan with contingencies
 - [x] dnd5e 5.x extractor, probe-validated
 - [x] Foundry panel (canvas + combat tracker entry points)
 - [x] Full i18n (English / Spanish)
@@ -114,7 +151,12 @@ los va a lastimar y por qué.
 **Cómo se usa:** el ícono del ojo en los controles de escena (o `Alt+L`), o el
 botón en el rastreador de combate. Elegís los personajes que están en la mesa,
 cargás monstruos desde los tokens seleccionados o desde el combate, y leés los
-augurios. El informe se puede copiar como texto.
+augurios. El informe se puede copiar como texto, plan de combate incluido.
+
+Además del informe, el módulo arma un **plan de combate** de 2 a 5 rondas: qué
+movida usa cada monstruo, contra quién y por qué, más contingencias para cuando
+el bicho queda malherido o cae un PJ. Todo determinista — sin IA, sin clave de
+API y sin red.
 
 El baseline de VD/XP se muestra **solo como contexto**, nunca como dictamen.
 

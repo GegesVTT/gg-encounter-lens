@@ -61,6 +61,34 @@ function readSave(act, fallbackDC) {
 const isRangedRange = (r) =>
   r && r.units && !["self", "touch", ""].includes(r.units) && num(r.value) > 5;
 
+// Tipos de activación jugables. Todo lo demás (rasgos pasivos, sentidos,
+// resistencias narradas) NO es una movida y se descarta del plan táctico.
+const ACTIVATIONS = new Set([
+  "action",
+  "bonus",
+  "reaction",
+  "legendary",
+  "lair",
+  "mythic",
+  "special",
+]);
+
+function readActivation(item, act) {
+  const raw = act?.activation?.type ?? item?.system?.activation?.type ?? "";
+  return ACTIVATIONS.has(raw) ? raw : "passive";
+}
+
+// Recarga (aliento de dragón 5-6) o usos por día. Devuelve estructura, no
+// texto, para que la capa de presentación lo localice.
+function readUses(item, act) {
+  const uses = act?.uses ?? item?.system?.uses;
+  for (const r of uses?.recovery ?? []) {
+    if (r?.period === "recharge") return { type: "recharge", formula: r.formula || "" };
+  }
+  const max = num(uses?.max);
+  return max > 0 ? { type: "limited", max } : null;
+}
+
 // =============================================================================
 //  PJ (type: "character")
 // =============================================================================
@@ -164,29 +192,85 @@ export function extractNPC(actor, count = 1) {
   const fallbackDC =
     8 + prof + abilityMod(sys.abilities?.[castAbility]?.value ?? 10);
 
+  const moves = [];
   const saveEffects = [];
   const attacks = [];
   let ranged = false;
 
   for (const it of actor.items ?? []) {
-    for (const act of Object.values(it.system?.activities ?? {})) {
-      const sv = readSave(act, fallbackDC);
-      if (sv) saveEffects.push({ name: it.name, ...sv });
+    // Un ítem puede tener varias activities que son PARTES DE LA MISMA acción
+    // (Life Drain: tirada de ataque + salvación de CON). Tratarlas como movidas
+    // rivales hace que compitan entre sí y que el plan describa media acción.
+    // Se fusionan en una sola movida por ítem.
+    let merged = null;
 
-      if (act?.type === "attack") {
-        const parts = damageParts(it, act);
-        const avg = parts.reduce((a, p) => a + (avgOfPart(p) ?? 0), 0);
-        const ab = act.attack?.ability || "str";
-        const toHit = act.attack?.flat
-          ? num(act.attack?.bonus)
-          : abilityMod(sys.abilities?.[ab]?.value) + prof + num(act.attack?.bonus);
-        if (avg > 0) attacks.push({ name: it.name, toHit, avgDamage: avg });
-      }
+    for (const act of Object.values(it.system?.activities ?? {})) {
       // El alcance puede venir de un efecto de salvación (rayos oculares),
       // no solo de un ataque: hay que mirarlo en TODA activity.
       if (act?.attack?.type?.value === "ranged" || isRangedRange(act?.range)) {
         ranged = true;
       }
+
+      const activation = readActivation(it, act);
+      if (activation === "passive") continue; // rasgo, no movida
+
+      const parts = damageParts(it, act);
+      const avgDamage = parts.reduce((a, p) => a + (avgOfPart(p) ?? 0), 0);
+      const sv = readSave(act, fallbackDC);
+      const isAttack = act?.type === "attack";
+      if (!isAttack && !sv && avgDamage <= 0) continue;
+
+      merged ??= {
+        name: it.name,
+        kind: null,
+        activation,
+        avgDamage: 0,
+        damageTypes: new Set(),
+        toHit: null,
+        ability: null,
+        dc: null,
+        uses: readUses(it, act),
+      };
+
+      // Máximo, no suma: las activities suelen describir la misma tirada.
+      merged.avgDamage = Math.max(merged.avgDamage, avgDamage);
+      for (const p of parts) for (const t of p?.types ?? []) merged.damageTypes.add(t);
+
+      if (isAttack) {
+        const ab = act.attack?.ability || "str";
+        merged.kind = "attack";
+        merged.toHit = act.attack?.flat
+          ? num(act.attack?.bonus)
+          : abilityMod(sys.abilities?.[ab]?.value) + prof + num(act.attack?.bonus);
+      }
+      if (sv) {
+        merged.ability = sv.ability;
+        merged.dc = sv.dc;
+        merged.kind ??= "save";
+      }
+      if (!merged.kind && avgDamage > 0) merged.kind = "damage";
+    }
+
+    if (!merged?.kind) continue;
+    merged.avgDamage = Math.round(merged.avgDamage * 10) / 10;
+    merged.damageTypes = [...merged.damageTypes];
+    moves.push(merged);
+
+    if (merged.ability) {
+      saveEffects.push({
+        name: it.name,
+        activation: merged.activation,
+        ability: merged.ability,
+        dc: merged.dc,
+      });
+    }
+    if (merged.kind === "attack" && merged.avgDamage > 0) {
+      attacks.push({
+        name: it.name,
+        activation: merged.activation,
+        toHit: merged.toHit,
+        avgDamage: merged.avgDamage,
+      });
     }
   }
 
@@ -198,6 +282,7 @@ export function extractNPC(actor, count = 1) {
     immune: sys.traits?.di?.value ?? [],
     vulnerable: sys.traits?.dv?.value ?? [],
     conditionImmune: sys.traits?.ci?.value ?? [],
+    moves,
     saveEffects,
     attacks,
     ranged,

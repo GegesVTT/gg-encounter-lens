@@ -24,7 +24,7 @@
     {{#if characters.length}}
       <ul class="ggel-grid">
         {{#each characters}}
-          <li class="ggel-card {{#if this.selected}}is-selected{{/if}}">
+          <li class="ggel-card {{#if this.selected}}is-selected{{/if}}" data-tooltip="{{this.name}}">
             <label>
               <input type="checkbox" data-pc-toggle="{{this.id}}" {{checked this.selected}}>
               <img src="{{this.img}}" alt="" loading="lazy">
@@ -64,7 +64,7 @@
     {{#if monsters.length}}
       <ul class="ggel-grid">
         {{#each monsters}}
-          <li class="ggel-card is-monster">
+          <li class="ggel-card is-monster" data-tooltip="{{this.name}}">
             <img src="{{this.img}}" alt="" loading="lazy">
             <span class="ggel-card-name">{{this.name}}</span>
             <span class="ggel-tag">{{localize "GGEL.ui.count" count=this.count}}</span>
@@ -126,6 +126,57 @@
       </ul>
     {{else}}
       <p class="ggel-empty">{{localize "GGEL.ui.emptyReport"}}</p>
+    {{/if}}
+  </section>
+
+
+  {{!-- ---------------------------- PLAN DE COMBATE ---------------------- --}}
+  <section class="ggel-panel ggel-plan">
+    <div class="ggel-panel-head">
+      <h2>{{localize "GGEL.ui.plan"}}</h2>
+      <div class="ggel-actions">
+        <label class="ggel-rounds">
+          {{localize "GGEL.ui.rounds"}}
+          <select data-rounds>
+            {{#each roundOptions}}
+              <option value="{{this.n}}" {{#if this.selected}}selected{{/if}}>{{this.n}}</option>
+            {{/each}}
+          </select>
+        </label>
+      </div>
+    </div>
+    <p class="ggel-hint">{{localize "GGEL.ui.planHint"}}</p>
+
+    {{#if plan}}
+      {{#each plan.rounds}}
+        <div class="ggel-round">
+          <div class="ggel-round-label">{{this.label}}</div>
+          <ul class="ggel-moves">
+            {{#each this.entries}}
+              <li class="ggel-move is-{{this.activation}}">
+                <p class="ggel-move-head">{{this.head}}</p>
+                <p class="ggel-move-body">{{this.body}}</p>
+              </li>
+            {{/each}}
+          </ul>
+        </div>
+      {{/each}}
+
+      {{#if plan.contingencies.length}}
+        <div class="ggel-round ggel-contingencies">
+          <div class="ggel-round-label">{{localize "GGEL.ui.contingencies"}}</div>
+          <ul class="ggel-moves">
+            {{#each plan.contingencies}}
+              <li class="ggel-move is-contingency">
+                <p class="ggel-move-head">{{this.head}}</p>
+                <p class="ggel-move-body">{{this.body}}</p>
+              </li>
+            {{/each}}
+          </ul>
+        </div>
+      {{/if}}
+    {{else}}
+      <p class="ggel-empty">{{localize "GGEL.ui.emptyPlan"}}</p>
     {{/if}}
   </section>
 

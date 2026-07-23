@@ -68,21 +68,28 @@ for (const file of [...scripts, ...templates]) {
   for (const m of src.matchAll(/["'](GGEL\.[A-Za-z0-9_.]+)["']/g)) used.add(m[1]);
 }
 
-// Las notas del motor se consumen como `clave.head` y `clave.body`.
-const expand = (key) =>
-  key.startsWith("GGEL.note.") ? [`${key}.head`, `${key}.body`] : [key];
 
+// Una clave usada puede ser simple ("GGEL.ui.plan") o un par head/body
+// ("GGEL.note.softSpot" → .head + .body). Se deduce por presencia, no por
+// prefijo: así no hay que mantener listas al agregar familias de claves.
 for (const [lang, dict] of Object.entries(langs)) {
   for (const key of used) {
-    for (const full of expand(key)) {
-      if (!(full in dict)) warn(`clave i18n faltante en ${lang}.json: ${full}`);
+    if (key in dict) continue;
+    for (const suffix of [".head", ".body"]) {
+      if (!(`${key}${suffix}` in dict))
+        warn(`clave i18n faltante en ${lang}.json: ${key}${suffix}`);
     }
   }
 }
 
 // Claves muertas (solo se informan contra en.json para no duplicar ruido).
 if (langs.en) {
-  const expected = new Set([...used].flatMap(expand));
+  const expected = new Set();
+  for (const k of used) {
+    expected.add(k);
+    expected.add(`${k}.head`);
+    expected.add(`${k}.body`);
+  }
   for (const key of Object.keys(langs.en)) {
     if (!expected.has(key)) warn(`clave i18n muerta (nadie la usa): ${key}`);
   }

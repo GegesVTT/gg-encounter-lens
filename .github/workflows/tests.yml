@@ -27,3 +27,6 @@ jobs:
 
       - name: Suite del motor
         run: node tests/run.mjs
+
+      - name: Suite táctica
+        run: node tests/tactics.mjs

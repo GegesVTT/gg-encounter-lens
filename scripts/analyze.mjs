@@ -27,10 +27,10 @@ export const SEV_ICON = {
 // --- Probabilidades d20 (crudas, sin crítico/pifia; alcanza para señal) ------
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 // Falla un save si d20 + mod < dc. Devuelve prob. de FALLO [0..1].
-const pFail = (mod, dc) => clamp01((dc - mod - 1) / 20);
+export const pFail = (mod, dc) => clamp01((dc - mod - 1) / 20);
 // Acierta un ataque si d20 + toHit >= ac. Devuelve prob. de ACIERTO [0..1].
-const pHit = (toHit, ac) => clamp01((21 - (ac - toHit)) / 20);
-const pct = (x) => `${Math.round(x * 100)}%`;
+export const pHit = (toHit, ac) => clamp01((21 - (ac - toHit)) / 20);
+export const pct = (x) => `${Math.round(x * 100)}%`;
 
 const note = (sev, key, data) => ({ sev, key, data });
 const list = (xs) => xs.join(", ");
@@ -42,14 +42,30 @@ function checkDamageMatchup(party, enc) {
   const out = [];
   for (const m of enc.monsters) {
     const neutralized = [];
+    const partial = []; // parte de su daño rebota — el hueco que se perdía
     const resisted = [];
     const vuln = [];
+    const blocked = new Set();
+    let severePartial = false;
 
     for (const pc of party.members) {
       const types = pc.damageTypes ?? [];
       if (!types.length) continue;
-      if (types.every((t) => m.immune.includes(t))) neutralized.push(pc.name);
-      else if (types.some((t) => m.resist.includes(t))) resisted.push(pc.name);
+      const immuneHit = types.filter((t) => m.immune.includes(t));
+      const resistHit = types.filter((t) => m.resist.includes(t));
+
+      if (immuneHit.length && immuneHit.length === types.length) {
+        neutralized.push(pc.name);
+        immuneHit.forEach((t) => blocked.add(t));
+      } else if (immuneHit.length) {
+        // Perder UNA vía de daño clave (el mago de fuego contra un dragón rojo)
+        // es información táctica de primer orden, aunque le queden otras.
+        partial.push(pc.name);
+        immuneHit.forEach((t) => blocked.add(t));
+        if (immuneHit.length / types.length >= 0.4) severePartial = true;
+      } else if (resistHit.length) {
+        resisted.push(pc.name);
+      }
       if (types.some((t) => m.vulnerable.includes(t))) vuln.push(pc.name);
     }
 
@@ -61,7 +77,23 @@ function checkDamageMatchup(party, enc) {
           immune: m.immune.join(" / "),
         })
       );
-    } else if (resisted.length >= Math.ceil(party.members.length / 2)) {
+    }
+
+    if (partial.length) {
+      out.push(
+        note(
+          severePartial ? SEV.THREAT : SEV.FRICTION,
+          "GGEL.note.dmgPartialImmune",
+          {
+            monster: m.name,
+            pcs: list(partial),
+            blocked: [...blocked].join(" / "),
+          }
+        )
+      );
+    }
+
+    if (resisted.length >= Math.ceil(party.members.length / 2)) {
       out.push(
         note(SEV.FRICTION, "GGEL.note.dmgResistedHalf", {
           monster: m.name,
@@ -111,10 +143,10 @@ function checkSaveMatchup(party, enc) {
     }
 
     for (const [ability, g] of byAbility) {
-      const rows = party.members.map((pc) => ({
-        name: pc.name,
-        p: pFail(pc.saves?.[ability] ?? 0, g.dc),
-      }));
+      const rows = party.members.map((pc) => {
+        const mod = pc.saves?.[ability] ?? 0;
+        return { name: pc.name, mod, p: pFail(mod, g.dc) };
+      });
       const failing = rows.filter((r) => r.p >= 0.55);
       if (!failing.length) continue;
 
@@ -127,7 +159,11 @@ function checkSaveMatchup(party, enc) {
         monster: m.name,
         ability: ability.toUpperCase(),
         dc: g.dc,
-        failing: list(failing.map((r) => r.name)),
+        // Transparencia: el DM tiene que poder auditar por qué se marcó a
+        // alguien. Sin el modificador y el %, la herramienta pide fe ciega.
+        failing: list(
+          failing.map((r) => `${r.name} ${r.mod >= 0 ? "+" : ""}${r.mod} → ${pct(r.p)}`)
+        ),
         avg: pct(avg),
       };
 
@@ -146,7 +182,50 @@ function checkSaveMatchup(party, enc) {
 }
 
 // =============================================================================
-//  CHECK 3 — Alcance / movilidad
+//  CHECK 3 — Punto débil transversal
+// -----------------------------------------------------------------------------
+//  Si DOS monstruos distintos apuntan a la misma salvación, ya no es una
+//  amenaza puntual: es EL agujero del grupo en este encuentro. Merece una nota
+//  propia, porque la conclusión táctica es distinta (rotar defensas, no esquivar
+//  un efecto concreto).
+// =============================================================================
+function checkSoftSpot(party, enc) {
+  if (party.members.length < 2) return [];
+  const byAbility = new Map();
+
+  for (const m of enc.monsters) {
+    for (const eff of m.saveEffects ?? []) {
+      const g = byAbility.get(eff.ability) ?? { monsters: new Set(), count: 0, dc: 0 };
+      g.monsters.add(m.name);
+      g.count += 1;
+      g.dc = Math.max(g.dc, eff.dc);
+      byAbility.set(eff.ability, g);
+    }
+  }
+
+  let worst = null;
+  for (const [ability, g] of byAbility) {
+    if (g.monsters.size < 2) continue;
+    const avg =
+      party.members.reduce((a, pc) => a + pFail(pc.saves?.[ability] ?? 0, g.dc), 0) /
+      party.members.length;
+    if (avg < 0.5) continue;
+    if (!worst || avg > worst.avg) worst = { ability, g, avg };
+  }
+  if (!worst) return [];
+
+  return [
+    note(SEV.THREAT, "GGEL.note.softSpot", {
+      ability: worst.ability.toUpperCase(),
+      monsters: worst.g.monsters.size,
+      count: worst.g.count,
+      avg: pct(worst.avg),
+    }),
+  ];
+}
+
+// =============================================================================
+//  CHECK 4 — Alcance / movilidad
 // =============================================================================
 function checkReach(party, enc) {
   const ranged = party.members.filter((p) => p.hasRanged);
@@ -250,6 +329,7 @@ export function analyze(party, encounter) {
   const checks = [
     ...checkDamageMatchup(party, encounter),
     ...checkSaveMatchup(party, encounter),
+    ...checkSoftSpot(party, encounter),
     ...checkReach(party, encounter),
     ...checkActionEconomy(party, encounter),
     ...checkDefensive(party, encounter),

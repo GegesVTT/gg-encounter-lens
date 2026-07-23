@@ -7,7 +7,8 @@
 import { MODULE_ID, SETTINGS } from "./constants.mjs";
 import { extractPC, extractNPC } from "./extract.mjs";
 import { analyze } from "./analyze.mjs";
-import { localizeReport, renderText, t } from "./i18n.mjs";
+import { planTurns } from "./tactics.mjs";
+import { localizeReport, localizePlan, renderText, t } from "./i18n.mjs";
 import {
   actorToProbe,
   listCharacters,
@@ -24,6 +25,10 @@ export class LensApp extends HandlebarsApplicationMixin(ApplicationV2) {
   #encounter = [];
   /** @type {object|null} informe ya localizado */
   #report = null;
+  /** @type {object|null} plan tactico ya localizado */
+  #plan = null;
+  /** Rondas a planificar. */
+  #rounds = 3;
 
   static DEFAULT_OPTIONS = {
     id: "gg-encounter-lens",
@@ -89,6 +94,9 @@ export class LensApp extends HandlebarsApplicationMixin(ApplicationV2) {
       hasParty: this.#party.size > 0,
       hasEncounter: monsters.length > 0,
       report: this.#report,
+      plan: this.#plan,
+      rounds: this.#rounds,
+      roundOptions: [2, 3, 4, 5].map((n) => ({ n, selected: n === this.#rounds })),
     };
   }
 
@@ -96,6 +104,15 @@ export class LensApp extends HandlebarsApplicationMixin(ApplicationV2) {
     super._onRender?.(context, options);
     // Los checkboxes del grupo no usan data-action porque necesitamos el estado
     // del input, no solo el click.
+    const roundsSel = this.element.querySelector("[data-rounds]");
+    if (roundsSel) {
+      roundsSel.addEventListener("change", (ev) => {
+        this.#rounds = Number(ev.currentTarget.value) || 3;
+        if (this.#report) this.#recompute();
+        else this.render();
+      });
+    }
+
     for (const box of this.element.querySelectorAll("[data-pc-toggle]")) {
       box.addEventListener("change", (ev) => {
         const id = ev.currentTarget.dataset.pcToggle;
@@ -124,6 +141,7 @@ export class LensApp extends HandlebarsApplicationMixin(ApplicationV2) {
     if (result.error) return ui.notifications.warn(t(result.error));
     this.#encounter = result.monsters;
     this.#report = null;
+    this.#plan = null;
     this.render();
   }
 
@@ -138,6 +156,7 @@ export class LensApp extends HandlebarsApplicationMixin(ApplicationV2) {
   static #onClearEncounter() {
     this.#encounter = [];
     this.#report = null;
+    this.#plan = null;
     this.render();
   }
 
@@ -145,6 +164,7 @@ export class LensApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const id = target.dataset.actorId;
     this.#encounter = this.#encounter.filter((m) => m.actorId !== id);
     this.#report = null;
+    this.#plan = null;
     this.render();
   }
 
@@ -152,6 +172,11 @@ export class LensApp extends HandlebarsApplicationMixin(ApplicationV2) {
     if (!this.#party.size) return ui.notifications.warn(t("GGEL.warn.noParty"));
     if (!this.#encounter.length)
       return ui.notifications.warn(t("GGEL.warn.noEncounter"));
+    this.#recompute();
+  }
+
+  /** Recalcula informe y plan. Lo usan el boton y el selector de rondas. */
+  #recompute() {
 
     const members = [];
     for (const id of this.#party) {
@@ -169,15 +194,22 @@ export class LensApp extends HandlebarsApplicationMixin(ApplicationV2) {
       return ui.notifications.warn(t("GGEL.warn.noEncounter"));
     }
 
-    const raw = analyze({ members }, { monsters });
+    const party = { members };
+    const encounter = { monsters };
+    const raw = analyze(party, encounter);
     this.#report = localizeReport(raw);
     this.#report.raw = raw;
+
+    // El informe dice que esta mal; el plan dice que hacer con eso.
+    const rawPlan = planTurns(party, encounter, { rounds: this.#rounds });
+    this.#plan = localizePlan(rawPlan);
+    this.#plan.raw = rawPlan;
     this.render();
   }
 
   static async #onCopy() {
     if (!this.#report?.raw) return;
-    await game.clipboard.copyPlainText(renderText(this.#report.raw));
+    await game.clipboard.copyPlainText(renderText(this.#report.raw, this.#plan?.raw));
     ui.notifications.info(t("GGEL.ui.copied"));
   }
 

@@ -388,3 +388,115 @@
     transform: none;
   }
 }
+
+/* =============================================================================
+   v0.2.0 — plan de combate y correcciones de legibilidad
+   ============================================================================= */
+
+/* Las etiquetas de VD en vino sobre fondo oscuro quedaban ilegibles.
+   Subimos contraste manteniendo el color de marca. */
+.ggel-tag-cr {
+  color: #d98a99;
+  border-color: rgba(217, 138, 153, 0.55);
+  background: rgba(138, 47, 63, 0.28);
+}
+
+/* Tarjetas un poco más anchas: los nombres largos se cortaban demasiado.
+   El nombre completo queda igualmente en el tooltip. */
+.ggel-grid {
+  grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+}
+
+/* --- selector de rondas ----------------------------------------------------- */
+.ggel-rounds {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.86rem;
+  color: var(--gg-tinta-suave);
+}
+
+.ggel-rounds select {
+  width: auto;
+  min-width: 52px;
+  padding: 3px 6px;
+  background: var(--gg-roble-claro);
+  color: var(--gg-pergamino);
+  border: 1px solid rgba(224, 162, 60, 0.4);
+  border-radius: 0;
+  font-family: var(--gg-body);
+}
+
+/* --- rondas ----------------------------------------------------------------- */
+.ggel-round {
+  margin-top: 14px;
+}
+
+.ggel-round-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 7px;
+  font-family: var(--gg-display);
+  font-size: 0.92rem;
+  letter-spacing: 0.05em;
+  color: var(--gg-ambar);
+}
+
+.ggel-round-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(224, 162, 60, 0.45), transparent);
+}
+
+.ggel-moves {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ggel-move {
+  padding: 8px 11px;
+  background: var(--gg-roble-claro);
+  border-left: 3px solid rgba(224, 162, 60, 0.5);
+}
+
+/* Legendarias y guarida ocurren fuera del turno: se distinguen a simple vista. */
+.ggel-move.is-legendary {
+  border-left-color: var(--gg-vino);
+  border-left-style: double;
+  border-left-width: 4px;
+}
+
+.ggel-move.is-lair {
+  border-left-color: var(--gg-sev-info);
+  border-left-style: dashed;
+}
+
+.ggel-move.is-contingency {
+  border-left-color: var(--gg-sev-advantage);
+  background: linear-gradient(90deg, rgba(95, 122, 91, 0.12), transparent 62%);
+}
+
+.ggel-move-head {
+  margin: 0;
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: var(--gg-pergamino);
+}
+
+.ggel-move-body {
+  margin: 2px 0 0;
+  font-size: 0.9rem;
+  color: var(--gg-tinta);
+}
+
+.ggel-contingencies {
+  margin-top: 18px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(224, 162, 60, 0.18);
+}
