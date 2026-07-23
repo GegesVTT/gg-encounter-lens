@@ -1,0 +1,390 @@
+/* =============================================================================
+   GG Encounter Lens — estilos del panel.
+   Depende de ggse-ui.css (tokens y primitivas de marca).
+   ============================================================================= */
+
+.ggel-app .window-content,
+.ggel-content {
+  background: var(--gg-roble);
+  color: var(--gg-tinta);
+  padding: 0;
+}
+
+.ggel-scroll {
+  padding: 18px 20px 26px;
+  overflow-y: auto;
+  height: 100%;
+}
+
+/* --- cabecera -------------------------------------------------------------- */
+.ggel-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.ggel-kicker {
+  font-size: 0.72rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--gg-tinta-suave);
+}
+
+.ggel-title {
+  font-family: var(--gg-display);
+  font-size: 1.7rem;
+  font-weight: 400;
+  line-height: 1.2;
+  margin: 4px 0 0;
+  border: none;
+  color: var(--gg-ambar);
+}
+
+.ggel-rule {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.ggel-rule::before,
+.ggel-rule::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(224, 162, 60, 0.55), transparent);
+}
+
+.ggel-lozenge {
+  width: 9px;
+  height: 9px;
+  transform: rotate(45deg);
+  background: var(--gg-ambar);
+  box-shadow: 0 0 0 3px rgba(224, 162, 60, 0.14);
+}
+
+/* --- paneles con marco octagonal ------------------------------------------- */
+.ggel-panel {
+  position: relative;
+  margin-bottom: 18px;
+  padding: 14px 16px 16px;
+  background: var(--gg-roble-alto);
+  clip-path: polygon(
+    14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px),
+    calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px
+  );
+}
+
+.ggel-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 1px solid rgba(224, 162, 60, 0.4);
+  clip-path: inherit;
+}
+
+.ggel-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ggel-panel-head h2 {
+  font-family: var(--gg-display);
+  font-size: 1.02rem;
+  font-weight: 400;
+  margin: 0;
+  border: none;
+  color: var(--gg-pergamino);
+}
+
+.ggel-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ggel-hint {
+  margin: 4px 0 12px;
+  font-size: 0.86rem;
+  font-style: italic;
+  color: var(--gg-tinta-suave);
+}
+
+.ggel-empty {
+  margin: 6px 0 0;
+  padding: 14px;
+  text-align: center;
+  font-style: italic;
+  color: var(--gg-tinta-suave);
+  border: 1px dashed rgba(224, 162, 60, 0.22);
+}
+
+/* --- botones (reusa el kit) ------------------------------------------------ */
+.ggel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border: 1px solid rgba(224, 162, 60, 0.45);
+  border-radius: 0;
+  background: transparent;
+  color: var(--gg-tinta);
+  font-family: var(--gg-body);
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  line-height: 1.4;
+  width: auto;
+  cursor: pointer;
+  clip-path: polygon(
+    7px 0, calc(100% - 7px) 0, 100% 7px, 100% calc(100% - 7px),
+    calc(100% - 7px) 100%, 7px 100%, 0 calc(100% - 7px), 0 7px
+  );
+  transition: transform 120ms ease, box-shadow 120ms ease, color 120ms ease,
+    background-color 120ms ease;
+}
+
+.ggel-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  color: var(--gg-ambar);
+  background: var(--gg-ambar-tenue);
+  box-shadow: 0 0 12px rgba(224, 162, 60, 0.28);
+}
+
+.ggel-btn:focus-visible {
+  outline: 2px solid var(--gg-ambar);
+  outline-offset: 2px;
+}
+
+.ggel-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ggel-btn-primary {
+  padding: 9px 26px;
+  font-family: var(--gg-display);
+  font-size: 1rem;
+  letter-spacing: 0.06em;
+  background: var(--gg-vino);
+  border-color: rgba(224, 162, 60, 0.7);
+  color: var(--gg-pergamino);
+}
+
+.ggel-btn-primary:hover:not(:disabled) {
+  background: #a03a4c;
+  color: #fff;
+}
+
+.ggel-cta {
+  display: flex;
+  justify-content: center;
+  margin: 4px 0 20px;
+}
+
+/* --- grillas de tarjetas (PJ y monstruos) ---------------------------------- */
+.ggel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ggel-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 9px;
+  background: var(--gg-roble-claro);
+  border: 1px solid rgba(224, 162, 60, 0.16);
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.ggel-card label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  cursor: pointer;
+}
+
+.ggel-card img {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  object-fit: cover;
+  border: 1px solid rgba(224, 162, 60, 0.3);
+  border-radius: 0;
+}
+
+.ggel-card input[type="checkbox"] {
+  accent-color: var(--gg-ambar);
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.ggel-card-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.92rem;
+  color: var(--gg-pergamino);
+}
+
+.ggel-card.is-selected {
+  border-color: rgba(224, 162, 60, 0.6);
+  box-shadow: 0 0 10px rgba(224, 162, 60, 0.16) inset;
+}
+
+.ggel-card:hover {
+  border-color: rgba(224, 162, 60, 0.45);
+}
+
+.ggel-tag {
+  flex: 0 0 auto;
+  padding: 1px 6px;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  color: var(--gg-ambar);
+  border: 1px solid rgba(224, 162, 60, 0.3);
+}
+
+.ggel-tag-cr {
+  color: var(--gg-vino);
+  border-color: rgba(138, 47, 63, 0.55);
+  background: rgba(138, 47, 63, 0.12);
+}
+
+.ggel-remove {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0;
+  color: var(--gg-tinta-suave);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.ggel-remove:hover {
+  color: var(--gg-vino);
+  border-color: rgba(138, 47, 63, 0.5);
+}
+
+/* --- informe ---------------------------------------------------------------- */
+.ggel-verdict {
+  margin: 4px 0 14px;
+  padding: 9px 12px;
+  font-family: var(--gg-display);
+  font-size: 0.98rem;
+  color: var(--gg-pergamino);
+  background: rgba(224, 162, 60, 0.07);
+  border-left: 3px solid var(--gg-ambar);
+}
+
+.ggel-notes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.ggel-note {
+  display: flex;
+  gap: 11px;
+  padding: 10px 12px;
+  background: var(--gg-roble-claro);
+  border-left: 3px solid var(--gg-sev-info);
+}
+
+.ggel-note.is-threat {
+  border-left-color: var(--gg-sev-threat);
+  background: linear-gradient(90deg, rgba(138, 47, 63, 0.16), transparent 62%);
+}
+
+.ggel-note.is-friction {
+  border-left-color: var(--gg-sev-friction);
+  background: linear-gradient(90deg, rgba(224, 162, 60, 0.13), transparent 62%);
+}
+
+.ggel-note.is-advantage {
+  border-left-color: var(--gg-sev-advantage);
+  background: linear-gradient(90deg, rgba(95, 122, 91, 0.16), transparent 62%);
+}
+
+.ggel-note-icon {
+  flex: 0 0 auto;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.ggel-note-text {
+  min-width: 0;
+}
+
+.ggel-note-head {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gg-pergamino);
+}
+
+.ggel-note-body {
+  margin: 3px 0 0;
+  font-size: 0.92rem;
+  color: var(--gg-tinta);
+}
+
+.ggel-baseline {
+  opacity: 0.78;
+  margin-top: 3px;
+}
+
+/* --- botón inyectado en el rastreador de combate --------------------------- */
+.ggel-tracker-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin: 5px 0 0;
+  padding: 4px 8px;
+  background: rgba(138, 47, 63, 0.85);
+  border: 1px solid rgba(224, 162, 60, 0.55);
+  border-radius: 0;
+  color: #e8dcc4;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background-color 120ms ease, box-shadow 120ms ease;
+}
+
+.ggel-tracker-button:hover {
+  background: #a03a4c;
+  box-shadow: 0 0 10px rgba(224, 162, 60, 0.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ggel-btn,
+  .ggel-card,
+  .ggel-tracker-button {
+    transition: none;
+  }
+  .ggel-btn:hover:not(:disabled) {
+    transform: none;
+  }
+}

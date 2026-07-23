@@ -1,0 +1,193 @@
+/* =============================================================================
+   GegesVTT UI — kit "ggse-ui"
+   Art nouveau élfica: líneas rectas y anguladas, sin redondeos. Marco octagonal,
+   doble filete recto, esquinas geométricas, divisor de rombo. Todo CSS puro.
+   ============================================================================= */
+
+@import url("https://fonts.googleapis.com/css2?family=Uncial+Antiqua&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&display=swap");
+
+.ggse-ui {
+  /* --- paleta ------------------------------------------------------------ */
+  --gg-roble: #19120d; /* roble negro */
+  --gg-roble-alto: #241a13;
+  --gg-roble-claro: #2f231a;
+  --gg-ambar: #e0a23c; /* ámbar */
+  --gg-ambar-tenue: rgba(224, 162, 60, 0.16);
+  --gg-vino: #8a2f3f; /* vino */
+  --gg-pergamino: #e8dcc4;
+  --gg-pergamino-tenue: #a8998a;
+  --gg-tinta: #cbbb9c;
+  --gg-tinta-suave: #9b8c72;
+
+  /* semáforo derivado de la paleta, no colores genéricos */
+  --gg-sev-threat: #8a2f3f;
+  --gg-sev-friction: #e0a23c;
+  --gg-sev-advantage: #5f7a5b;
+  --gg-sev-info: #8a7e6d;
+
+  /* --- tipografía -------------------------------------------------------- */
+  --gg-display: "Uncial Antiqua", "DejaVu Serif Condensed", serif;
+  --gg-body: "Cormorant Garamond", "DejaVu Serif Condensed", Georgia, serif;
+
+  /* --- geometría --------------------------------------------------------- */
+  --gg-chaflan: 14px; /* corte del marco octagonal */
+  --gg-filete: 1px;
+
+  color: var(--gg-tinta);
+  font-family: var(--gg-body);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* --- marco octagonal con doble filete recto --------------------------------
+   El chaflán se hace con clip-path (líneas rectas, nunca curvas). El doble
+   filete se logra con dos capas: el borde del pseudo-elemento y un inset. */
+.ggse-ui .gg-frame {
+  position: relative;
+  background: var(--gg-roble-alto);
+  clip-path: polygon(
+    var(--gg-chaflan) 0,
+    calc(100% - var(--gg-chaflan)) 0,
+    100% var(--gg-chaflan),
+    100% calc(100% - var(--gg-chaflan)),
+    calc(100% - var(--gg-chaflan)) 100%,
+    var(--gg-chaflan) 100%,
+    0 calc(100% - var(--gg-chaflan)),
+    0 var(--gg-chaflan)
+  );
+}
+
+.ggse-ui .gg-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: var(--gg-filete) solid rgba(224, 162, 60, 0.45);
+  clip-path: inherit;
+}
+
+.ggse-ui .gg-frame::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  pointer-events: none;
+  border: var(--gg-filete) solid rgba(224, 162, 60, 0.18);
+  clip-path: inherit;
+}
+
+/* --- tipografía de marca --------------------------------------------------- */
+.ggse-ui .gg-display {
+  font-family: var(--gg-display);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--gg-ambar);
+}
+
+.ggse-ui .gg-kicker {
+  font-family: var(--gg-body);
+  font-size: 0.72rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--gg-tinta-suave);
+}
+
+/* --- divisor de rombo (elemento firma) ------------------------------------- */
+.ggse-ui .gg-rule {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0 0;
+}
+
+.ggse-ui .gg-rule::before,
+.ggse-ui .gg-rule::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(224, 162, 60, 0.55),
+    transparent
+  );
+}
+
+.ggse-ui .gg-lozenge {
+  width: 9px;
+  height: 9px;
+  transform: rotate(45deg);
+  background: var(--gg-ambar);
+  box-shadow: 0 0 0 3px rgba(224, 162, 60, 0.14);
+}
+
+/* --- botones ---------------------------------------------------------------
+   Sin redondeo; chaflán menor en las esquinas. Micro-interacción: hover lift
+   + resplandor ámbar. Respetan prefers-reduced-motion. */
+.ggse-ui .gg-btn {
+  --gg-chaflan: 7px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border: 1px solid rgba(224, 162, 60, 0.45);
+  border-radius: 0;
+  background: transparent;
+  color: var(--gg-tinta);
+  font-family: var(--gg-body);
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  clip-path: polygon(
+    var(--gg-chaflan) 0,
+    calc(100% - var(--gg-chaflan)) 0,
+    100% var(--gg-chaflan),
+    100% calc(100% - var(--gg-chaflan)),
+    calc(100% - var(--gg-chaflan)) 100%,
+    var(--gg-chaflan) 100%,
+    0 calc(100% - var(--gg-chaflan)),
+    0 var(--gg-chaflan)
+  );
+  transition: transform 120ms ease, box-shadow 120ms ease, color 120ms ease,
+    background-color 120ms ease;
+}
+
+.ggse-ui .gg-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  color: var(--gg-ambar);
+  background: var(--gg-ambar-tenue);
+  box-shadow: 0 0 12px rgba(224, 162, 60, 0.28);
+}
+
+.ggse-ui .gg-btn:focus-visible {
+  outline: 2px solid var(--gg-ambar);
+  outline-offset: 2px;
+}
+
+.ggse-ui .gg-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ggse-ui .gg-btn-primary {
+  background: var(--gg-vino);
+  border-color: rgba(224, 162, 60, 0.7);
+  color: var(--gg-pergamino);
+  font-family: var(--gg-display);
+  letter-spacing: 0.06em;
+}
+
+.ggse-ui .gg-btn-primary:hover:not(:disabled) {
+  background: #a03a4c;
+  color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ggse-ui .gg-btn {
+    transition: none;
+  }
+  .ggse-ui .gg-btn:hover:not(:disabled) {
+    transform: none;
+  }
+}

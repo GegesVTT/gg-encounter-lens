@@ -1,0 +1,69 @@
+{
+  "GGEL.title": "Ojo del Augur",
+  "GGEL.subtitle": "Crónicas Bárdicas",
+  "GGEL.tool": "Ojo del Augur",
+
+  "GGEL.ui.party": "Grupo",
+  "GGEL.ui.partyHint": "Elegí los personajes que van a estar en la mesa.",
+  "GGEL.ui.encounter": "Encuentro",
+  "GGEL.ui.encounterHint": "Cargá monstruos desde el lienzo o el rastreador de combate.",
+  "GGEL.ui.useSelected": "Desde tokens seleccionados",
+  "GGEL.ui.useCombat": "Desde el combate",
+  "GGEL.ui.clear": "Limpiar",
+  "GGEL.ui.analyze": "Leer los augurios",
+  "GGEL.ui.briefing": "Informe",
+  "GGEL.ui.copy": "Copiar como texto",
+  "GGEL.ui.copied": "Informe copiado al portapapeles.",
+  "GGEL.ui.selectAll": "Todos",
+  "GGEL.ui.selectNone": "Ninguno",
+  "GGEL.ui.emptyParty": "Todavía no seleccionaste personajes.",
+  "GGEL.ui.emptyEncounter": "Todavía no cargaste monstruos.",
+  "GGEL.ui.emptyReport": "Elegí un grupo y un encuentro, y leé los augurios.",
+  "GGEL.ui.level": "Nivel {level}",
+  "GGEL.ui.cr": "VD {cr}",
+  "GGEL.ui.count": "×{count}",
+  "GGEL.ui.remove": "Quitar",
+
+  "GGEL.warn.noParty": "Elegí al menos un personaje primero.",
+  "GGEL.warn.noEncounter": "Cargá al menos un monstruo primero.",
+  "GGEL.warn.noTokens": "No hay tokens seleccionados en el lienzo.",
+  "GGEL.warn.noNpcTokens": "Ninguno de los tokens seleccionados es un PNJ.",
+  "GGEL.warn.noCombat": "No hay un combate activo en esta escena.",
+  "GGEL.warn.noCombatNpcs": "El rastreador de combate no tiene PNJs.",
+  "GGEL.warn.gmOnly": "Solo el DM puede usar el Ojo del Augur.",
+
+  "GGEL.verdict.threat": "Este encuentro tiene dientes. Mirá las banderas rojas.",
+  "GGEL.verdict.friction": "Se puede, pero esperá fricción.",
+  "GGEL.verdict.clear": "Sin banderas rojas: el cruce se ve parejo.",
+
+  "GGEL.note.dmgNeutralized.head": "{monster}: {pcs} no le hacen daño",
+  "GGEL.note.dmgNeutralized.body": "Inmune a {immune}. Ese/esos PJ necesitan otra fuente de daño.",
+  "GGEL.note.dmgResistedHalf.head": "{monster} resiste el daño de media party",
+  "GGEL.note.dmgResistedHalf.body": "Resiste {resist}. Afecta a {pcs}. Los combates se estiran.",
+  "GGEL.note.dmgResistedSome.head": "{monster} resiste a {pcs}",
+  "GGEL.note.dmgResistedSome.body": "Resiste {resist}. Manejable si el resto compensa el daño.",
+  "GGEL.note.dmgVulnerable.head": "{pcs} golpean la vulnerabilidad de {monster}",
+  "GGEL.note.dmgVulnerable.body": "Vulnerable a {vulnerable}: prioricen ese tipo de daño.",
+
+  "GGEL.note.saveMulti.head": "{monster}: {count} efectos piden {ability} (CD {dc})",
+  "GGEL.note.saveMulti.body": "Fallan probable: {failing} (fallo medio {avg}). Ej.: {examples}. Nadie con {ability} sólida para anclar.",
+  "GGEL.note.saveSingle.head": "{effect} ({monster}): {ability} CD {dc}",
+  "GGEL.note.saveSingle.body": "Fallan probable: {failing} (fallo medio {avg}). Nadie con {ability} sólida para anclar.",
+
+  "GGEL.note.reachNone.head": "Nadie tiene alcance contra {monsters}",
+  "GGEL.note.reachNone.body": "Todo el grupo es cuerpo a cuerpo. Los patean con impunidad.",
+  "GGEL.note.reachPartial.head": "{melee} quedan sin blanco",
+  "GGEL.note.reachPartial.body": "Solo {ranged} alcanzan a {monsters}. Prevé cómo bajarlos.",
+
+  "GGEL.note.economy.head": "Los superan en acciones {enemies} a {party}",
+  "GGEL.note.economy.body": "{ratio}× enemigos por PJ. Sin control de masas o un cuello de botella, comen daño cada ronda.",
+
+  "GGEL.note.defensive.head": "{pc} (CA {ac}, {hp} PV) es el eslabón débil",
+  "GGEL.note.defensive.body": "{attack} de {monster} pega a +{toHit} (~{hitPct}) por ~{dmg}: lo baja en {hits} impacto(s). Cuidá el foco de fuego.",
+
+  "GGEL.note.estimated.head": "Valores estimados para {pcs}",
+  "GGEL.note.estimated.body": "Hubo que derivar CA o PV desde los datos fuente. No se cuentan efectos activos como Armadura de mago.",
+
+  "GGEL.note.baseline.head": "Contexto: VD total {cr} vs nivel total {levels}",
+  "GGEL.note.baseline.body": "Referencia cruda de tonelaje, no un dictamen. El informe de arriba manda."
+}

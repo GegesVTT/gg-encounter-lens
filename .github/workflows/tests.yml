@@ -1,0 +1,29 @@
+# Corre la auditoría y las suites de test en cada push y pull request.
+# Las suites que dependen de probes locales se omiten solas si no están.
+name: Tests
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Chequeo de sintaxis
+        run: for f in scripts/*.mjs tests/*.mjs; do node --check "$f"; done
+
+      - name: Auditoría pre-publicación
+        run: node tests/audit.mjs
+
+      - name: Suite del motor
+        run: node tests/run.mjs

@@ -1,0 +1,132 @@
+<div class="ggel-scroll">
+
+  <header class="ggel-header">
+    <div class="ggel-kicker">{{localize "GGEL.subtitle"}}</div>
+    <h1 class="ggel-title">{{localize "GGEL.title"}}</h1>
+    <div class="ggel-rule" aria-hidden="true"><span class="ggel-lozenge"></span></div>
+  </header>
+
+  {{!-- ------------------------------ GRUPO ------------------------------ --}}
+  <section class="ggel-panel">
+    <div class="ggel-panel-head">
+      <h2>{{localize "GGEL.ui.party"}}</h2>
+      <div class="ggel-actions">
+        <button type="button" class="ggel-btn ggel-btn-ghost" data-action="selectAll">
+          {{localize "GGEL.ui.selectAll"}}
+        </button>
+        <button type="button" class="ggel-btn ggel-btn-ghost" data-action="selectNone">
+          {{localize "GGEL.ui.selectNone"}}
+        </button>
+      </div>
+    </div>
+    <p class="ggel-hint">{{localize "GGEL.ui.partyHint"}}</p>
+
+    {{#if characters.length}}
+      <ul class="ggel-grid">
+        {{#each characters}}
+          <li class="ggel-card {{#if this.selected}}is-selected{{/if}}">
+            <label>
+              <input type="checkbox" data-pc-toggle="{{this.id}}" {{checked this.selected}}>
+              <img src="{{this.img}}" alt="" loading="lazy">
+              <span class="ggel-card-name">{{this.name}}</span>
+              {{#if this.level}}
+                <span class="ggel-tag">{{localize "GGEL.ui.level" level=this.level}}</span>
+              {{/if}}
+            </label>
+          </li>
+        {{/each}}
+      </ul>
+    {{else}}
+      <p class="ggel-empty">{{localize "GGEL.ui.emptyParty"}}</p>
+    {{/if}}
+  </section>
+
+  {{!-- ---------------------------- ENCUENTRO ---------------------------- --}}
+  <section class="ggel-panel">
+    <div class="ggel-panel-head">
+      <h2>{{localize "GGEL.ui.encounter"}}</h2>
+      <div class="ggel-actions">
+        <button type="button" class="ggel-btn ggel-btn-ghost" data-action="fromCanvas">
+          <i class="fa-solid fa-crosshairs"></i> {{localize "GGEL.ui.useSelected"}}
+        </button>
+        <button type="button" class="ggel-btn ggel-btn-ghost" data-action="fromCombat">
+          <i class="fa-solid fa-swords"></i> {{localize "GGEL.ui.useCombat"}}
+        </button>
+        {{#if hasEncounter}}
+          <button type="button" class="ggel-btn ggel-btn-ghost" data-action="clearEncounter">
+            {{localize "GGEL.ui.clear"}}
+          </button>
+        {{/if}}
+      </div>
+    </div>
+    <p class="ggel-hint">{{localize "GGEL.ui.encounterHint"}}</p>
+
+    {{#if monsters.length}}
+      <ul class="ggel-grid">
+        {{#each monsters}}
+          <li class="ggel-card is-monster">
+            <img src="{{this.img}}" alt="" loading="lazy">
+            <span class="ggel-card-name">{{this.name}}</span>
+            <span class="ggel-tag">{{localize "GGEL.ui.count" count=this.count}}</span>
+            {{#if this.cr}}
+              <span class="ggel-tag ggel-tag-cr">{{localize "GGEL.ui.cr" cr=this.cr}}</span>
+            {{/if}}
+            <button type="button" class="ggel-remove" data-action="removeMonster"
+                    data-actor-id="{{this.actorId}}" data-tooltip="{{localize 'GGEL.ui.remove'}}">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </li>
+        {{/each}}
+      </ul>
+    {{else}}
+      <p class="ggel-empty">{{localize "GGEL.ui.emptyEncounter"}}</p>
+    {{/if}}
+  </section>
+
+  {{!-- ------------------------------ ACCIÓN ----------------------------- --}}
+  <div class="ggel-cta">
+    <button type="button" class="ggel-btn ggel-btn-primary" data-action="analyze"
+            {{#unless hasParty}}disabled{{/unless}}>
+      <i class="fa-solid fa-eye"></i> {{localize "GGEL.ui.analyze"}}
+    </button>
+  </div>
+
+  {{!-- ------------------------------ INFORME ---------------------------- --}}
+  <section class="ggel-panel ggel-report">
+    <div class="ggel-panel-head">
+      <h2>{{localize "GGEL.ui.briefing"}}</h2>
+      {{#if report}}
+        <div class="ggel-actions">
+          <button type="button" class="ggel-btn ggel-btn-ghost" data-action="copy">
+            <i class="fa-solid fa-copy"></i> {{localize "GGEL.ui.copy"}}
+          </button>
+        </div>
+      {{/if}}
+    </div>
+
+    {{#if report}}
+      <p class="ggel-verdict">{{report.verdict}}</p>
+      <ul class="ggel-notes">
+        {{#each report.notes}}
+          <li class="ggel-note is-{{this.sev}}">
+            <span class="ggel-note-icon" aria-hidden="true">{{this.icon}}</span>
+            <div class="ggel-note-text">
+              <p class="ggel-note-head">{{this.head}}</p>
+              <p class="ggel-note-body">{{this.body}}</p>
+            </div>
+          </li>
+        {{/each}}
+        <li class="ggel-note is-{{report.baseline.sev}} ggel-baseline">
+          <span class="ggel-note-icon" aria-hidden="true">{{report.baseline.icon}}</span>
+          <div class="ggel-note-text">
+            <p class="ggel-note-head">{{report.baseline.head}}</p>
+            <p class="ggel-note-body">{{report.baseline.body}}</p>
+          </div>
+        </li>
+      </ul>
+    {{else}}
+      <p class="ggel-empty">{{localize "GGEL.ui.emptyReport"}}</p>
+    {{/if}}
+  </section>
+
+</div>
