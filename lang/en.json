@@ -104,5 +104,9 @@
   "GGEL.ui.delete": "Delete",
   "GGEL.ui.saved": "Encounter “{name}” saved.",
   "GGEL.warn.noName": "Give the encounter a name before saving it.",
-  "GGEL.warn.missingActors": "{n} actor(s) from the saved encounter no longer exist and were skipped."
+  "GGEL.warn.missingActors": "{n} actor(s) from the saved encounter no longer exist and were skipped.",
+  "GGEL.plan.multiattackRaw.head": "{monster} multiattacks {target} with {move}",
+  "GGEL.plan.multiattackRaw.body": "The exact routine could not be read. Build the round from: {options}. You can repeat one attack or mix them.",
+  "GGEL.note.multiattackRaw.head": "{monster} has {feature}, but the routine could not be read",
+  "GGEL.note.multiattackRaw.body": "The real round hits harder than shown above. Its attacks are: {options}. Pick the combination its stat block calls for."
 }

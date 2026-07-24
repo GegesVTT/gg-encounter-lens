@@ -313,6 +313,29 @@ function checkDataQuality(party) {
 }
 
 // =============================================================================
+//  Multiataque sin rutina legible — la marca que pidio el DM
+// -----------------------------------------------------------------------------
+//  Si sabemos que el bicho multiataca pero no pudimos leer la rutina, callarlo
+//  seria peor que avisarlo: la lectura defensiva quedaria corta y el DM no
+//  sabria por que. Se dice, y se listan las armas para que arme la ronda.
+// =============================================================================
+function checkMultiattack(party, enc) {
+  const out = [];
+  for (const m of enc.monsters) {
+    const ma = m.multiattack;
+    if (!ma?.approximate) continue;
+    out.push(
+      note(SEV.FRICTION, "GGEL.note.multiattackRaw", {
+        monster: m.name,
+        feature: ma.name,
+        options: (ma.available ?? []).map((a) => a.name).join(" / "),
+      })
+    );
+  }
+  return out;
+}
+
+// =============================================================================
 //  Baseline XP/CR — SOLO contexto, nunca veredicto
 // =============================================================================
 function baselineNote(party, enc) {
@@ -333,6 +356,7 @@ export function analyze(party, encounter) {
     ...checkReach(party, encounter),
     ...checkActionEconomy(party, encounter),
     ...checkDefensive(party, encounter),
+    ...checkMultiattack(party, encounter),
     ...checkDataQuality(party),
   ];
   const order = { threat: 0, friction: 1, advantage: 2, info: 3 };

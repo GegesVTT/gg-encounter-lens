@@ -104,5 +104,9 @@
   "GGEL.ui.delete": "Borrar",
   "GGEL.ui.saved": "Encuentro «{name}» guardado.",
   "GGEL.warn.noName": "Poné un nombre antes de guardar el encuentro.",
-  "GGEL.warn.missingActors": "{n} actor(es) del encuentro guardado ya no existen y se omitieron."
+  "GGEL.warn.missingActors": "{n} actor(es) del encuentro guardado ya no existen y se omitieron.",
+  "GGEL.plan.multiattackRaw.head": "{monster} multiataca a {target} con {move}",
+  "GGEL.plan.multiattackRaw.body": "No pude leer la rutina exacta. Armá la ronda con: {options}. Podés repetir el mismo ataque o combinarlos.",
+  "GGEL.note.multiattackRaw.head": "{monster} tiene {feature}, pero no pude leer la rutina",
+  "GGEL.note.multiattackRaw.body": "La ronda real pega más de lo que muestro arriba. Sus ataques son: {options}. Elegí la combinación que corresponda a su stat block."
 }

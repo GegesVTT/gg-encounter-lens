@@ -114,5 +114,49 @@ function dragon({ multiName, description, biteName, clawName }) {
     "La lectura defensiva mide la ronda completa, no un golpe suelto");
 }
 
+// --- Compendio a medio traducir: el caso real de Tzindelor -------------------
+// Acciones "Ataque múltiple" y "Mordisco" en español, pero "Claw" quedó en
+// inglés. La descripción menciona "garras", que no coincide con "Claw", así que
+// la rutina exacta es ilegible. Antes esto se descartaba en silencio.
+{
+  const d = extractNPC(dragon({
+    multiName: "Ataque múltiple",
+    biteName: "Mordisco",
+    clawName: "Claw",
+    description: "El dragón hace tres ataques: uno con su mordisco y dos con sus garras.",
+  }));
+
+  assert(!!d.multiattack, "MIXTO: detecta el multiataque aunque la rutina no se lea");
+  assert(d.multiattack.approximate === true, "MIXTO: se marca como aproximado, no inventa rutina");
+  assert(d.multiattack.available.length === 2, "MIXTO: ofrece las armas para armar la ronda");
+  assert(
+    d.attacks[0].name !== "Ataque múltiple",
+    "MIXTO: no antepone un total falso a la lectura defensiva"
+  );
+}
+
+// --- Nombres en español, descripción en inglés (el reverso) ------------------
+{
+  const d = extractNPC(dragon({
+    multiName: "Ataque múltiple",
+    biteName: "Mordisco",
+    clawName: "Garra",
+    description: "The dragon makes three attacks: one with its bite and two with its claws.",
+  }));
+  assert(!!d.multiattack, "REVERSO: la pista de nombre rescata el caso");
+  assert(d.multiattack.approximate === true, "REVERSO: marcado como aproximado");
+}
+
+// --- Un rasgo cualquiera sin relación no debe marcarse -----------------------
+{
+  const d = extractNPC(dragon({
+    multiName: "Presencia aterradora",
+    biteName: "Mordisco",
+    clawName: "Garra",
+    description: "Cada criatura a elección del dragón debe superar una salvación.",
+  }));
+  assert(!d.multiattack, "No marca multiataque en un rasgo que no lo es");
+}
+
 console.log(`\n${fail === 0 ? "✓ TODO OK" : "✗ HAY FALLOS"} — ${pass} pass / ${fail} fail`);
 process.exit(fail === 0 ? 0 : 1);

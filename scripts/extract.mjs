@@ -99,12 +99,27 @@ function readActivation(item, act) {
 // Recarga (aliento de dragón 5-6) o usos por día. Devuelve estructura, no
 // texto, para que la capa de presentación lo localice.
 function readUses(item, act) {
-  const uses = act?.uses ?? item?.system?.uses;
-  for (const r of uses?.recovery ?? []) {
-    if (r?.period === "recharge") return { type: "recharge", formula: r.formula || "" };
+  // La recarga puede venir en tres formas segun de donde salga el stat block
+  // (SRD nativo, import de terceros, o contenido migrado de dnd5e viejo).
+  // Mirarlas todas evita que un aliento de dragon se repita cada ronda.
+  const candidates = [act?.uses, item?.system?.uses];
+  for (const uses of candidates) {
+    for (const r of uses?.recovery ?? []) {
+      if (r?.period === "recharge") return { type: "recharge", formula: r.formula || "" };
+    }
   }
-  const max = num(uses?.max);
-  return max > 0 ? { type: "limited", max } : null;
+
+  // Forma heredada: system.recharge = { value: 5, charged: true }.
+  const legacy = act?.recharge ?? item?.system?.recharge;
+  if (legacy && (legacy.value != null || legacy.charged != null)) {
+    return { type: "recharge", formula: legacy.value != null ? String(legacy.value) : "" };
+  }
+
+  for (const uses of candidates) {
+    const max = num(uses?.max);
+    if (max > 0) return { type: "limited", max };
+  }
+  return null;
 }
 
 // --- Multiataque -------------------------------------------------------------
@@ -145,43 +160,77 @@ function countBefore(text, index) {
   return 1;
 }
 
+// Pistas de nombre/identificador. NO son la señal principal (romperían en
+// idiomas no contemplados), pero rescatan el caso frecuente de compendios a
+// medio traducir: acciones en español y descripción en inglés, o al revés.
+const MULTIATTACK_HINTS = [
+  "multiattack", "multiataque", "ataquemultiple", "ataquesmultiples",
+  "attaquesmultiples", "attaquemultiple", "angriffsserie", "mehrfachangriff",
+  "attacchimultipli", "ataquemultiplo", "multiataques",
+];
+
+const alphaKey = (s) => fold(s).replace(/[^a-z]/g, "");
+
 function detectMultiattack(items, attacks) {
-  if (attacks.length < 1) return null;
+  if (!attacks.length) return null;
+  let approximate = null; // se guarda por si no aparece una rutina exacta
 
   for (const it of items) {
     if (it.type !== "feat") continue;
     if (it.system?.type?.value !== "monster") continue;
 
+    // Un multiataque no tiene mecánica propia: solo ordena las que ya existen.
     const acts = Object.values(it.system?.activities ?? {});
     const hasOwnMechanics = acts.some(
       (a) => a?.type === "attack" || a?.save || (a?.damage?.parts ?? []).length
     );
     if (hasOwnMechanics) continue;
 
-    const text = fold(stripHtml(it.system?.description?.value));
-    if (!text) continue;
+    const hinted =
+      MULTIATTACK_HINTS.some((h) => alphaKey(it.name).includes(h)) ||
+      MULTIATTACK_HINTS.some((h) => alphaKey(it.system?.identifier ?? "").includes(h));
 
+    const text = fold(stripHtml(it.system?.description?.value));
     const parts = [];
     for (const at of attacks) {
-      // Nombres muy cortos generan falsos positivos contra texto corrido.
       if (at.name.length < 4) continue;
       const idx = text.indexOf(fold(at.name));
       if (idx < 0) continue;
       parts.push({ name: at.name, count: countBefore(text, idx), attack: at });
     }
 
+    // NIVEL 1 — rutina legible: la descripción nombra dos o más de sus ataques.
     if (parts.length >= 2) {
-      const avgDamage = parts.reduce((a, p) => a + p.count * p.attack.avgDamage, 0);
-      const toHit = Math.max(...parts.map((p) => p.attack.toHit ?? 0));
       return {
         name: it.name,
+        approximate: false,
         parts: parts.map(({ name, count }) => ({ name, count })),
-        avgDamage: Math.round(avgDamage * 10) / 10,
-        toHit,
+        available: attacks.map((a) => ({ name: a.name, toHit: a.toHit, avgDamage: a.avgDamage })),
+        avgDamage:
+          Math.round(parts.reduce((a, p) => a + p.count * p.attack.avgDamage, 0) * 10) / 10,
+        toHit: Math.max(...parts.map((p) => p.attack.toHit ?? 0)),
+      };
+    }
+
+    // NIVEL 2 — el rasgo existe pero la rutina no se puede leer (nombres y
+    // descripción en idiomas distintos, o redacción que no los menciona).
+    // Se marca igual y se ofrecen las armas para que el DM arme la ronda.
+    if (!approximate && (hinted || (parts.length === 1 && attacks.length >= 2))) {
+      approximate = {
+        name: it.name,
+        approximate: true,
+        parts: [],
+        available: attacks.map((a) => ({ name: a.name, toHit: a.toHit, avgDamage: a.avgDamage })),
+        // Sin rutina no inventamos una suma: usamos el mejor golpe suelto como
+        // piso honesto, y el informe avisa que la ronda real pega más.
+        avgDamage: Math.max(...attacks.map((a) => a.avgDamage ?? 0)),
+        toHit: Math.max(...attacks.map((a) => a.toHit ?? 0)),
       };
     }
   }
-  return null;
+
+  // NIVEL 3 — nada detectado: se devuelve null y el plan usa ataques sueltos.
+  return approximate;
 }
 
 // =============================================================================
@@ -376,8 +425,8 @@ export function extractNPC(actor, count = 1) {
   }
 
   // El multiataque es lo que el bicho hace CADA ronda; se agrega como movida
-  // sintética con el daño sumado para que el planificador lo prefiera sobre un
-  // ataque suelto, y se marca para que no lo penalice la regla de repetición.
+  // sintética para que el planificador lo prefiera sobre un ataque suelto, y se
+  // marca para que no lo penalice la regla de repetición.
   const multiattack = detectMultiattack(actor.items ?? [], attacks);
   if (multiattack) {
     moves.push({
@@ -391,6 +440,8 @@ export function extractNPC(actor, count = 1) {
       dc: null,
       uses: null,
       routine: multiattack.parts,
+      available: multiattack.available,
+      approximate: multiattack.approximate,
       alwaysAvailable: true,
     });
   }
@@ -406,10 +457,21 @@ export function extractNPC(actor, count = 1) {
     multiattack,
     moves,
     saveEffects,
-    // La lectura defensiva debe medir la ronda completa, no un golpe suelto.
-    attacks: multiattack
-      ? [{ name: multiattack.name, activation: "action", toHit: multiattack.toHit, avgDamage: multiattack.avgDamage }, ...attacks]
-      : attacks,
+    // Con rutina legible, la lectura defensiva mide la ronda completa. Sin
+    // ella no se antepone nada: el número seguiría siendo un golpe suelto y
+    // fingir lo contrario sería peor que quedarse corto avisando.
+    attacks:
+      multiattack && !multiattack.approximate
+        ? [
+            {
+              name: multiattack.name,
+              activation: "action",
+              toHit: multiattack.toHit,
+              avgDamage: multiattack.avgDamage,
+            },
+            ...attacks,
+          ]
+        : attacks,
     ranged,
     fly: num(sys.attributes?.movement?.fly) > 0,
   };

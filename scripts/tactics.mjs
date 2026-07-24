@@ -112,6 +112,18 @@ function describe(monster, move, scored, party) {
     };
     // Un ataque puede arrastrar una salvación (Life Drain: golpe + CON o se
     // reduce el máximo de PV). Decir solo la mitad confunde en la mesa.
+    if (move.approximate && move.available?.length) {
+      return entry(
+        "GGEL.plan.multiattackRaw",
+        {
+          ...data,
+          options: move.available
+            .map((a) => `${a.name} (+${a.toHit ?? 0}, ~${Math.round(a.avgDamage ?? 0)})`)
+            .join(" · "),
+        },
+        { activation: move.activation }
+      );
+    }
     if (move.routine?.length) {
       return entry(
         "GGEL.plan.multiattack",
@@ -191,8 +203,13 @@ export function planTurns(party, encounter, { rounds = 3 } = {}) {
     const entries = [];
 
     for (const a of actors) {
+      // Si el bicho multiataca, sus golpes sueltos no son opciones reales: la
+      // ronda es la rutina completa. Ofrecer "una garra" seria un guion falso.
+      const multi = a.actions.find((m) => m.routine?.length || m.approximate);
+
       let best = null;
       for (const move of a.actions) {
+        if (multi && move !== multi && move.kind === "attack") continue;
         const scored = scoreMove(move, party);
         if (!scored) continue;
 
