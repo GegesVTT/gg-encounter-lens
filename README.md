@@ -28,15 +28,15 @@
 
 **The briefing** — not a difficulty score, a list of things that will actually go wrong:
 
-![Briefing](https://raw.githubusercontent.com/GegesVTT/gg-encounter-lens/main/docs/images/screenshot-briefing.jpg)
+![Briefing](https://raw.githubusercontent.com/GegesVTT/gg-encounter-lens/main/docs/images/el_briefing.jpg)
 
 **The panel** — pick who is at the table, load monsters from the canvas or the combat tracker:
 
-![Panel](https://raw.githubusercontent.com/GegesVTT/gg-encounter-lens/main/docs/images/screenshot-panel.jpg)
+![Panel](https://raw.githubusercontent.com/GegesVTT/gg-encounter-lens/main/docs/images/el_opener.jpg)
 
 **The combat plan** — what each monster does, against whom, and why:
 
-![Combat plan](https://raw.githubusercontent.com/GegesVTT/gg-encounter-lens/main/docs/images/screenshot-plan.jpg)
+![Combat plan](https://raw.githubusercontent.com/GegesVTT/gg-encounter-lens/main/docs/images/el_combatplan.jpg)
 
 ---
 
