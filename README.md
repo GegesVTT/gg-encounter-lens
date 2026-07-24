@@ -1,164 +1,279 @@
-# GG Encounter Lens
+<p align="center">
+  <img src="https://raw.githubusercontent.com/GegesVTT/gg-encounter-lens/main/docs/images/icon.png" width="120" alt="GG Encounter Lens">
+</p>
 
-> Party-aware encounter analysis for Foundry VTT (D&D 5e).
-> Part of the **GegesVTT** family — *Crónicas Bárdicas*.
+<h1 align="center">GG Encounter Lens</h1>
 
-Every encounter builder answers the same question: *how hard is this, in XP?*
-None of them answer the question a GM actually asks: **how will this specific
-party fare against this specific monster?**
+<p align="center">
+  <strong>Party-aware encounter analysis for D&D 5e, straight from Foundry VTT</strong><br>
+  Mismatch <strong>briefing</strong> · round-by-round <strong>combat plan</strong> · <strong>contingencies</strong> for when the fight turns
+</p>
 
-GG Encounter Lens reads your party's real damage types, save spread, reach and
-defences, cross-references them against the monsters' stat blocks, and returns a
-plain-language briefing of *mismatches* — colour-coded, not scored.
+<p align="center">
+  <img src="https://img.shields.io/badge/Foundry-v13-green" alt="Foundry v13">
+  <img src="https://img.shields.io/badge/D%26D-5e-red" alt="D&D 5e">
+  <img src="https://img.shields.io/badge/License-MIT-yellow" alt="License: MIT">
+  <img src="https://img.shields.io/github/v/release/GegesVTT/gg-encounter-lens" alt="Latest Release">
+</p>
 
-```
-🔴  Beholder: 3 effects call for WIS (DC 16)
-     Likely to fail: Ainé, GPT-O, Ofelia (party average 63%).
-🟡  Aparición resists half the party's damage
-     Resists acid / bludgeoning / cold / fire / lightning / piercing / slashing.
-🟡  Ofelia (AC 13, 58 HP) is the weak link
-     Life Drain hits at +6 (~70%) for ~18: drops her in 4 hits.
-ℹ️  Context: total CR 15 vs total level 24 — a reference, not a verdict.
-```
+<p align="center"><strong>English</strong> · <a href="#-español">Español</a></p>
 
-## The five checks
-
-| # | Check | Question it answers |
-|---|-------|---------------------|
-| 1 | Damage matchup | Do their damage types collide with resistances or immunities? |
-| 2 | Save matchup | Which save does the monster target, and who fails it? |
-| 3 | Reach & mobility | Can anyone touch a flyer or a shooter? |
-| 4 | Action economy | Are they outnumbered in actions per round? |
-| 5 | Defensive read | Who is the weak link, and how many hits until they drop? |
-| 6 | Soft spot | Is one save targeted by *several* monsters at once? |
-
-Save notes show each character's actual modifier and failure chance
-(`Bula +3 → 65%`) so the GM can audit any flag rather than take it on faith.
-The XP/CR baseline appears **as context only**, never as a verdict.
-
-## The combat plan
-
-Reading the mismatches is half the job; the other half is running the monsters
-like they mean it. The planner turns the same analysis into a round-by-round
-script — deterministic, no API key, no network:
-
-```
-── Round 1 ──
-  • Tyrant uses Paralysing Ray on Ofelia
-    CON DC 16: Ofelia fails 60%. Pure control — taking them out of the round
-    beats raw damage.
-  • Legendary action: Tail swipe
-── Contingencies ──
-  • Save Breath for when the Tyrant is bloodied
-  • If Ofelia drops, focus shifts to Gepeto
-```
-
-It scores every move by expected impact against *this* party, opens with control
-and closes with damage, respects recharge and limited uses, keeps legendary and
-lair actions on their own tracks, and adds contingencies for a bloodied monster,
-a fallen character and the party's softest save.
-
-## Using it
-
-Two ways in, both GM-only:
-
-- **Scene controls** → the eye icon in the token tools, or `Alt+L`.
-- **Combat tracker** → the button in the tracker header loads the current fight.
-
-Inside the panel, pick the characters who are at the table (the selection is
-remembered), load monsters from the selected tokens or from combat, and read the
-omens. The briefing can be copied as plain text.
-
-## Architecture
-
-Strict separation, same philosophy as GG Sheet Export:
-
-```
-extraction (system JSON) → normalised IR → analysis → presentation
-   extract.mjs                          analyze.mjs    i18n.mjs + lens-app.mjs
-      ↑
-  bridge.mjs (the only file that touches Foundry documents)
-```
-
-`analyze.mjs` knows nothing about Foundry or dnd5e — only the IR. It emits
-structured notes (`{sev, key, data}`), never finished strings, so the same engine
-works in any language and is testable outside Foundry.
-
-### The two-path finding
-
-Exported **PC** JSON contains almost no derived values: `ac:{flat:null}`,
-`hp.max:null`, no ability modifiers or save totals, `details.level` undefined.
-Foundry computes those at runtime. **NPC** JSON, by contrast, stores everything
-resolved. The extractor therefore always prefers a derived value and only
-reconstructs one as a fallback — and `bridge.mjs` feeds live actors through
-`actor.toObject()` plus derived values, so inside Foundry there is no estimation
-at all. Estimated values are flagged in the briefing when they do occur.
-
-### Two more data-model findings
-
-`activation.type` cleanly separates actions, bonus actions, legendary actions,
-lair actions and passive traits — the planner needs that split, because a lair
-action happens on initiative 20 and a passive trait is not a move at all.
-
-Activities are merged **per item**, not treated individually: a wraith's Life
-Drain is one attack roll *plus* a Constitution save on the same action, and
-scoring them as rival moves made the plan describe half an action.
-
-### Known limitation
-
-Many monsters store the range of save-based effects only in prose — a beholder's
-eye rays carry `range:{units:"self"}` in structured data. The reach check
-under-reports for those. Documented rather than papered over.
-
-## Development
-
-```bash
-node tests/run-all.mjs   # everything below, in order
-node tests/audit.mjs     # imports, i18n keys, templates, module.json coherence
-node tests/run.mjs       # synthetic fixtures: each rule in isolation
-node tests/tactics.mjs   # new checks + the combat planner
-node tests/probe.mjs     # extraction against real exported actors
-node tests/real.mjs      # full pipeline, both languages
-```
-
-The probe suites read exported actor JSON from `/mnt/user-data/uploads` and skip
-themselves when it is absent, so CI stays green.
-
-## Status
-
-**v0.2.0** — analysis and combat planning, validated against real campaign data.
-
-- [x] Analysis engine + six checks
-- [x] Per-character transparency on every save flag
-- [x] Deterministic combat plan with contingencies
-- [x] dnd5e 5.x extractor, probe-validated
-- [x] Foundry panel (canvas + combat tracker entry points)
-- [x] Full i18n (English / Spanish)
-- [ ] HTML/PDF export with Crónicas Bárdicas styling
-- [ ] PF2e support
+<p align="center">
+  <img src="https://raw.githubusercontent.com/GegesVTT/gg-encounter-lens/main/docs/images/cover.png" width="100%" alt="GG Encounter Lens — GegesVTT">
+</p>
 
 ---
 
-## Español
+## Screenshots
 
-Análisis de encuentros **consciente del grupo** para Foundry VTT (D&D 5e).
+**The briefing** — not a difficulty score, a list of things that will actually go wrong:
 
-En vez de un número de dificultad, el módulo lee los tipos de daño reales de tu
-party, su reparto de salvaciones, su alcance y sus defensas, los cruza contra el
-stat block de los monstruos y devuelve un informe legible de *desajustes*: qué
-los va a lastimar y por qué.
+![Briefing](https://raw.githubusercontent.com/GegesVTT/gg-encounter-lens/main/docs/images/screenshot-briefing.jpg)
 
-**Cómo se usa:** el ícono del ojo en los controles de escena (o `Alt+L`), o el
-botón en el rastreador de combate. Elegís los personajes que están en la mesa,
-cargás monstruos desde los tokens seleccionados o desde el combate, y leés los
-augurios. El informe se puede copiar como texto, plan de combate incluido.
+**The panel** — pick who is at the table, load monsters from the canvas or the combat tracker:
 
-Además del informe, el módulo arma un **plan de combate** de 2 a 5 rondas: qué
-movida usa cada monstruo, contra quién y por qué, más contingencias para cuando
-el bicho queda malherido o cae un PJ. Todo determinista — sin IA, sin clave de
-API y sin red.
+![Panel](https://raw.githubusercontent.com/GegesVTT/gg-encounter-lens/main/docs/images/screenshot-panel.jpg)
 
-El baseline de VD/XP se muestra **solo como contexto**, nunca como dictamen.
+**The combat plan** — what each monster does, against whom, and why:
 
-**Instalación:** pegá la URL del manifiesto en Foundry →
-`https://github.com/GegesVTT/gg-encounter-lens/releases/latest/download/module.json`
+![Combat plan](https://raw.githubusercontent.com/GegesVTT/gg-encounter-lens/main/docs/images/screenshot-plan.jpg)
+
+---
+
+## ✨ Features
+
+Every encounter builder answers the same question: *how hard is this, in XP?* None of them answer the one a GM actually asks: **how will this party fare against this monster?**
+
+- **🔍 Mismatch briefing** — reads your party's real damage types, save spread, reach and defences, cross-references them against the monsters' stat blocks, and returns colour-coded findings (🔴 threat · 🟡 friction · 🟢 advantage) in plain language.
+- **Auditable, not oracular** — every save flag shows the character's actual modifier and failure chance (`Bula +3 → 65%`). You can check the maths instead of taking the tool's word for it.
+- **⚔️ Combat plan** — 2 to 5 rounds of suggested monster actions, scored by expected impact against *this* party. Opens with control, closes with damage, respects recharge and limited uses, and keeps legendary and lair actions on their own tracks.
+- **Contingencies** — what to do when the monster is bloodied, when a character drops, and which save to keep leaning on if the fight stalls.
+- **🔎 NPC picker** — search your world's monsters by name (accents optional, so `aparicion` finds *Aparición*), filter by folder, set how many of each. Plan a fight days before a single token touches the canvas.
+- **💾 Saved encounters** — name an encounter and reload it on game night. Prep on Tuesday, play on Saturday.
+- **Three ways in** — the eye icon in the scene controls (or `Alt+L`), a button in the combat tracker that loads the fight in progress, and the picker itself.
+- **No AI, no API key, no network** — the planner is deterministic and rule-based, so it works offline and gives the same answer twice.
+- GM-only, fully localized in **English and Spanish**.
+
+### 🎯 The six checks
+
+| # | Check | Question it answers |
+|---|-------|---------------------|
+| 1 | **Damage matchup** | Do their damage types collide with resistances or immunities? |
+| 2 | **Partial immunity** | Is *one* character's main damage type dead against this monster? |
+| 3 | **Save matchup** | Which save does the monster target, and who fails it? |
+| 4 | **Soft spot** | Is one save targeted by *several* monsters at once? |
+| 5 | **Reach & mobility** | Can anyone touch a flyer or a shooter? |
+| 6 | **Action economy & defensive read** | Are they outnumbered? Who is the weak link, and how many hits until they drop? |
+
+The defensive read measures a monster's **full round**, multiattack included — not one lonely claw.
+
+A monster with ten eye rays produces **four grouped findings**, not ten. Consolidation by ability is the difference between signal and noise.
+
+The XP/CR baseline appears **as context only**, never as a verdict.
+
+## 💡 Beyond the panel
+
+- **Prep the fight, not just the stat block** — the plan is a script you can skim mid-session instead of improvising a dragon's tactics at 11pm.
+- **Paste it into your notes** — one button copies briefing and plan as plain text, ready for a journal entry or your prep doc.
+- **Sanity-check homebrew** — build the monster, run it against your real party, see whether it lands where you meant it to.
+
+## 📦 Installation
+
+In Foundry: **Add-on Modules → Install Module** and paste the manifest URL:
+
+```
+https://github.com/GegesVTT/gg-encounter-lens/releases/latest/download/module.json
+```
+
+Then enable **GG Encounter Lens** in *Manage Modules* of your dnd5e world. (Manual alternative: drop the `gg-encounter-lens` folder into `Data/modules/`.)
+
+## 🚀 Usage
+
+Two entry points, both GM-only:
+
+- **Scene controls** — the eye 👁 icon in the token tools, or the `Alt+L` shortcut.
+- **Combat tracker** — the button in the tracker header loads the fight already running.
+
+In the panel: tick the characters who are at the table (the selection is remembered between sessions), then build the encounter — **search the world's NPCs**, pull them **from selected tokens**, or grab the **combat tracker**. Adjust quantities with `+` / `−`, save the encounter under a name to reload it later, pick how many rounds to plan, and read the omens.
+
+> Analysis runs on live actor data, so ability modifiers, AC and hit points come out exactly as the sheet shows them — active effects included.
+
+## 🔌 Macro API
+
+```js
+const api = game.modules.get("gg-encounter-lens").api;
+
+api.open();                        // open the panel
+api.open({ fromCombat: true });    // open it with the current fight loaded
+
+// Analyse without touching the UI
+const party = ["Rahegal", "Xanax", "Bula"].map(n => game.actors.getName(n));
+const foes  = [{ actor: game.actors.getName("Beholder"), count: 1 }];
+
+const { report, plan } = api.analyze(party, foes, { rounds: 3 });
+console.log(report.verdict, report.notes, plan.rounds, plan.contingencies);
+
+// Straight to plain text, ready to paste into a journal
+const text = api.toText(party, foes, { rounds: 4 });
+```
+
+## ✅ Compatibility
+
+- Foundry VTT **v13** (uses ApplicationV2 and the v13 scene-control API; not tested on v12, so it is not declared).
+- **dnd5e** — verified on 5.x. Damage, attack bonuses and save DCs are read from the system's **activities**, so the numbers match what the sheet rolls.
+- Actor types: `character` for the party, `npc` for the encounter.
+- PF2e is not supported yet — its encounter maths is a different beast.
+
+## 🛠️ Technical notes
+
+- **Strict separation**: `extract.mjs` (system JSON → normalised IR) → `analyze.mjs` / `tactics.mjs` (IR → structured findings) → `i18n.mjs` + the panel (findings → text). The engines know nothing about Foundry or dnd5e and emit `{key, data}` notes, never finished strings, so they are testable outside Foundry and work in any language.
+- **`bridge.mjs` is the only file that touches Foundry documents.** It feeds live actors through `actor.toObject()` — which returns the same shape as an exported JSON — and layers the runtime-derived values on top.
+- **Two paths, one code path.** Exported *PC* JSON stores almost no derived values (`ac:{flat:null}`, `hp.max:null`, no save totals, no level); *NPC* JSON stores everything resolved. The extractor always prefers a derived value and only reconstructs one as a fallback, so inside Foundry there is no estimation at all — and any value that *was* estimated is flagged in the briefing rather than passed off as fact.
+- **Activities are merged per item, not scored individually.** A wraith's Life Drain is one attack roll *plus* a Constitution save on the same action; treating them as rival moves made the planner describe half an action.
+- **`activation.type` separates** actions, bonus actions, legendary actions, lair actions and passive traits. A lair action happens on initiative 20 and a passive trait is not a move at all — the plan would be nonsense without that split.
+- **Multiattack is detected by shape, not by name.** dnd5e keeps the routine in prose, and matching the word *Multiattack* breaks in a Spanish world. Instead: a monster trait with no mechanics of its own whose description names two or more of that monster's own attacks. Names and description always share a language, so the test holds anywhere. Counts are read from the numeral preceding each attack (`two with its claws` → 2).
+- **Ability modifiers are added to base weapon damage.** They do not live in the damage parts, so leaving them out under-counted every attack — a wraith's Life Drain read 18 instead of the stat block's 21.
+- The planner scores every move as expected impact in damage-equivalent points, values control above raw damage (losing a turn costs more than the hit that caused it), and biases toward control on round 1 and damage from round 3.
+- **Known limitation:** many monsters store the range of save-based effects only in prose — a beholder's eye rays carry `range:{units:"self"}` in structured data. The reach check under-reports for those. Documented rather than papered over.
+
+## 🧭 Roadmap
+
+- **HTML/PDF export** of briefing and plan, in the Crónicas Bárdicas look — a one-page sheet to bring to the table.
+- **Compendium search** in the NPC picker, for GMs who never import monsters into the world.
+- **Party Packet** integration: encounter analysis alongside the group's sheets.
+- **Pathfinder 2e**, once the encounter maths is worth doing properly.
+- Playing something else? [Open an issue](https://github.com/GegesVTT/gg-encounter-lens/issues).
+
+## 🏷️ Keywords
+
+encounter builder · encounter balance · encounter analysis · combat planner · monster tactics · GM tools · session prep · party analysis · resistances · immunities · saving throws · action economy · D&D 5e · dnd5e · Foundry VTT
+
+## 📜 License
+
+MIT — © Geges
+
+Part of the **GegesVTT** family: [GG Sheet Export](https://github.com/GegesVTT/gg-sheet-export) · [GG Nameforge](https://github.com/GegesVTT/gg-nameforge) · [GG Calendar](https://github.com/GegesVTT/gg-calendar)
+
+---
+
+## 🇪🇸 Español
+
+**Análisis de encuentros consciente del grupo para D&D 5e, directo desde Foundry VTT.** Informe de **desajustes** · **plan de combate** ronda por ronda · **contingencias** para cuando la pelea se tuerce.
+
+### ✨ Características
+
+Todos los constructores de encuentros responden la misma pregunta: *¿cuán difícil es esto, en XP?* Ninguno responde la que el DM realmente se hace: **¿cómo le va a ir a este grupo contra este monstruo?**
+
+- **🔍 Informe de desajustes** — lee los tipos de daño reales de tu grupo, su reparto de salvaciones, su alcance y sus defensas, los cruza contra el stat block de los monstruos y devuelve hallazgos con semáforo (🔴 amenaza · 🟡 fricción · 🟢 ventaja) en lenguaje llano.
+- **Auditable, no oracular** — cada marca de salvación muestra el modificador real del personaje y su probabilidad de fallo (`Bula +3 → 65%`). Podés verificar la cuenta en vez de creerle a la herramienta.
+- **⚔️ Plan de combate** — de 2 a 5 rondas de acciones sugeridas, puntuadas por impacto esperado contra *este* grupo. Abre con control, cierra con daño, respeta recargas y usos limitados, y mantiene legendarias y acciones de guarida en sus propios carriles.
+- **Contingencias** — qué hacer cuando el monstruo queda malherido, cuando cae un PJ, y sobre qué salvación insistir si el combate se estanca.
+- **🔎 Selector de PNJs** — buscá los monstruos de tu mundo por nombre (sin acentos también: `aparicion` encuentra *Aparición*), filtrá por carpeta y elegí cuántos de cada uno. Podés armar la pelea días antes de que un token toque el mapa.
+- **💾 Encuentros guardados** — poné nombre a un encuentro y recuperalo el día de la partida. Preparás el martes, jugás el sábado.
+- **Tres vías de entrada** — el ícono del ojo en los controles de escena (o `Alt+L`), un botón en el rastreador de combate que carga la pelea en curso, y el propio selector.
+- **Sin IA, sin clave de API y sin red** — el planificador es determinista y por reglas: funciona offline y da la misma respuesta dos veces.
+- Solo para el DM, localizado en **español e inglés**.
+
+### 🎯 Los seis chequeos
+
+| # | Chequeo | Qué responde |
+|---|---------|--------------|
+| 1 | **Cruce de daño** | ¿Sus tipos de daño chocan con resistencias o inmunidades? |
+| 2 | **Inmunidad parcial** | ¿La vía de daño principal de *un* PJ muere contra este bicho? |
+| 3 | **Cruce de salvaciones** | ¿A qué salvación apunta el monstruo y quién la falla? |
+| 4 | **Punto débil** | ¿Hay una salvación castigada por *varios* monstruos a la vez? |
+| 5 | **Alcance y movilidad** | ¿Alguien puede tocar a un volador o a un tirador? |
+| 6 | **Economía de acción y lectura defensiva** | ¿Los superan en número? ¿Quién es el eslabón débil y en cuántos golpes cae? |
+
+La lectura defensiva mide la **ronda completa** del monstruo, multiataque incluido — no una garra suelta.
+
+Un monstruo con diez rayos oculares produce **cuatro hallazgos agrupados**, no diez. La consolidación por habilidad es la diferencia entre señal y ruido.
+
+El baseline de VD/XP aparece **solo como contexto**, nunca como dictamen.
+
+### 💡 Más allá del panel
+
+- **Preparar la pelea, no solo el stat block** — el plan es un guion que podés repasar en plena sesión en vez de improvisar la táctica de un dragón a las 11 de la noche.
+- **Pegalo en tus notas** — un botón copia informe y plan como texto plano, listo para un journal o tu documento de prep.
+- **Revisar homebrew** — armás el monstruo, lo corrés contra tu grupo real, y ves si cae donde querías.
+
+### 📦 Instalación
+
+En Foundry: **Módulos Complementarios → Instalar Módulo** y pegá la URL de manifiesto:
+
+```
+https://github.com/GegesVTT/gg-encounter-lens/releases/latest/download/module.json
+```
+
+Después activá **GG Encounter Lens** en *Gestionar Módulos* de tu mundo dnd5e. (Alternativa manual: copiá la carpeta `gg-encounter-lens` dentro de `Data/modules/`.)
+
+### 🚀 Uso
+
+Dos vías de entrada, ambas solo para el DM:
+
+- **Controles de escena** — el ícono del ojo 👁 en las herramientas de token, o el atajo `Alt+L`.
+- **Rastreador de combate** — el botón del header carga la pelea que ya está corriendo.
+
+En el panel: tildá los personajes que están en la mesa (la selección se recuerda entre sesiones) y armá el encuentro — **buscando entre los PNJs del mundo**, **desde los tokens seleccionados** o **desde el combate**. Ajustá cantidades con `+` / `−`, guardá el encuentro con un nombre para recuperarlo después, elegí cuántas rondas planificar, y leé los augurios.
+
+> El análisis corre sobre los datos vivos del actor: los modificadores, la CA y los PV salen exactamente como los muestra la ficha, efectos activos incluidos.
+
+### 🔌 API para macros
+
+```js
+const api = game.modules.get("gg-encounter-lens").api;
+
+api.open();                        // abre el panel
+api.open({ fromCombat: true });    // lo abre con el combate actual cargado
+
+// Analizar sin tocar la interfaz
+const grupo = ["Rahegal", "Xanax", "Bula"].map(n => game.actors.getName(n));
+const bichos = [{ actor: game.actors.getName("Beholder"), count: 1 }];
+
+const { report, plan } = api.analyze(grupo, bichos, { rounds: 3 });
+console.log(report.verdict, report.notes, plan.rounds, plan.contingencies);
+
+// Directo a texto plano, listo para pegar en un journal
+const texto = api.toText(grupo, bichos, { rounds: 4 });
+```
+
+### ✅ Compatibilidad
+
+- Foundry VTT **v13** (usa ApplicationV2 y la API de controles de escena de v13; no está probado en v12, así que no se declara).
+- **dnd5e** — verificado en 5.x. El daño, los bonos de ataque y las CD de salvación se leen de las **activities** del sistema: los números coinciden con lo que tira la ficha.
+- Tipos de actor: `character` para el grupo, `npc` para el encuentro.
+- PF2e todavía no está soportado — su matemática de encuentros es otra bestia.
+
+### 🛠️ Notas técnicas
+
+- **Separación estricta**: `extract.mjs` (JSON del sistema → IR normalizada) → `analyze.mjs` / `tactics.mjs` (IR → hallazgos estructurados) → `i18n.mjs` y el panel (hallazgos → texto). Los motores no saben nada de Foundry ni de dnd5e y emiten notas `{key, data}`, nunca cadenas armadas: son testeables fuera de Foundry y funcionan en cualquier idioma.
+- **`bridge.mjs` es el único archivo que toca documentos de Foundry.** Pasa los actores vivos por `actor.toObject()` —que devuelve la misma forma que un JSON exportado— y le superpone los valores derivados en runtime.
+- **Dos caminos, un solo código.** El JSON exportado de un *PJ* casi no guarda valores derivados (`ac:{flat:null}`, `hp.max:null`, sin totales de salvación ni nivel); el de un *PNJ* los guarda todos resueltos. El extractor siempre prefiere el valor derivado y solo reconstruye como fallback, así que dentro de Foundry no hay ninguna estimación — y si algún valor *sí* se estimó, el informe lo avisa en vez de disimularlo.
+- **Las activities se fusionan por ítem, no se puntúan por separado.** El Life Drain de una aparición es una tirada de ataque *más* una salvación de Constitución en la misma acción; tratarlas como movidas rivales hacía que el plan describiera media acción.
+- **`activation.type` separa** acciones, acciones adicionales, legendarias, de guarida y rasgos pasivos. Una acción de guarida ocurre en iniciativa 20 y un rasgo pasivo no es una movida: sin esa distinción el plan sería un disparate.
+- **El multiataque se detecta por forma, no por nombre.** dnd5e guarda la rutina en prosa, y buscar la palabra *Multiattack* rompe en un mundo en español. En cambio: un rasgo de monstruo sin mecánica propia cuya descripción nombra dos o más de sus propios ataques. Nombres y descripción comparten idioma siempre, así que la prueba vale en cualquier lengua. Las cantidades se leen del numeral que precede a cada ataque (`dos con sus garras` → 2).
+- **El modificador de característica se suma al daño base del arma.** No vive en las partes de daño, así que omitirlo subcontaba todos los ataques — el Life Drain de una aparición daba 18 en vez de los 21 del stat block.
+- El planificador puntúa cada movida como impacto esperado en puntos de daño equivalente, valora el control por encima del daño bruto (perder un turno cuesta más que el golpe que lo causó), y sesga hacia el control en la ronda 1 y hacia el daño desde la 3.
+- **Limitación conocida:** muchos monstruos guardan el alcance de sus efectos con salvación solo en la prosa — los rayos de un beholder llevan `range:{units:"self"}` en los datos estructurados. El chequeo de alcance sub-reporta en esos casos. Documentado, no tapado.
+
+### 🧭 Hoja de ruta
+
+- **Exportación HTML/PDF** del informe y el plan, con la estética Crónicas Bárdicas — una hoja para llevar a la mesa.
+- **Búsqueda en compendios** dentro del selector, para quienes nunca importan los bichos al mundo.
+- Integración con **Party Packet**: análisis del encuentro junto a las fichas del grupo.
+- **Pathfinder 2e**, cuando su matemática de encuentros valga la pena hacerse bien.
+- ¿Jugás otra cosa? [Abrí un issue](https://github.com/GegesVTT/gg-encounter-lens/issues).
+
+### 🏷️ Palabras clave
+
+constructor de encuentros · balance de encuentros · análisis de encuentros · planificador de combate · táctica de monstruos · herramientas de DM · preparación de sesión · análisis del grupo · resistencias · inmunidades · salvaciones · economía de acción · D&D 5e · dnd5e · Foundry VTT
+
+### 📜 Licencia
+
+MIT — © Geges
+
+Parte de la familia **GegesVTT**: [GG Sheet Export](https://github.com/GegesVTT/gg-sheet-export) · [GG Nameforge](https://github.com/GegesVTT/gg-nameforge) · [GG Calendar](https://github.com/GegesVTT/gg-calendar)
+
+---
+
+<p align="center"><em>GG Encounter Lens · GegesVTT · Crónicas Bárdicas</em></p>

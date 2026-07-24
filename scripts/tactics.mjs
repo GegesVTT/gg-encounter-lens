@@ -112,6 +112,16 @@ function describe(monster, move, scored, party) {
     };
     // Un ataque puede arrastrar una salvación (Life Drain: golpe + CON o se
     // reduce el máximo de PV). Decir solo la mitad confunde en la mesa.
+    if (move.routine?.length) {
+      return entry(
+        "GGEL.plan.multiattack",
+        {
+          ...data,
+          routine: move.routine.map((r) => `${r.count}x ${r.name}`).join(" + "),
+        },
+        { activation: move.activation }
+      );
+    }
     if (move.ability && move.dc) {
       const t = bestSaveTarget(move, party);
       return entry(
@@ -196,10 +206,10 @@ export function planTurns(party, encounter, { rounds = 3 } = {}) {
         // Penalizamos la repetición para que el guion tenga variedad, salvo que
         // no haya alternativa real, y sesgamos según la fase del combate.
         const isControl = scored.kind === "save" && !(move.avgDamage > 0);
-        const adjusted =
-          scored.score *
-          Math.pow(REPEAT_PENALTY, timesUsed) *
-          phaseBias(isControl, r);
+        // El multiataque es lo que el bicho hace CADA ronda: penalizarlo por
+        // repetirse produciria un guion falso donde el dragon deja de morder.
+        const repeat = move.alwaysAvailable ? 1 : Math.pow(REPEAT_PENALTY, timesUsed);
+        const adjusted = scored.score * repeat * phaseBias(isControl, r);
         if (!best || adjusted > best.adjusted) best = { move, scored, adjusted };
       }
 

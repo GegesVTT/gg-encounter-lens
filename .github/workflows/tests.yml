@@ -30,3 +30,6 @@ jobs:
 
       - name: Suite táctica
         run: node tests/tactics.mjs
+
+      - name: Suite de multiataque
+        run: node tests/multiattack.mjs

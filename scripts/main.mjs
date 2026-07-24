@@ -7,12 +7,25 @@
 
 import { MODULE_ID, SETTINGS } from "./constants.mjs";
 import { LensApp } from "./lens-app.mjs";
-import { t } from "./i18n.mjs";
+import { extractPC, extractNPC } from "./extract.mjs";
+import { actorToProbe } from "./bridge.mjs";
+import { analyze } from "./analyze.mjs";
+import { planTurns } from "./tactics.mjs";
+import { localizeReport, localizePlan, renderText, t } from "./i18n.mjs";
 
 Hooks.once("init", () => {
   // Selección de grupo: por cliente y oculta (se maneja desde el panel).
   game.settings.register(MODULE_ID, SETTINGS.PARTY, {
     scope: "client",
+    config: false,
+    type: Array,
+    default: [],
+  });
+
+  // Encuentros guardados: alcance de mundo, porque se preparan un dia y se
+  // juegan otro, y un co-DM tiene que poder abrirlos.
+  game.settings.register(MODULE_ID, SETTINGS.ENCOUNTERS, {
+    scope: "world",
     config: false,
     type: Array,
     default: [],
@@ -31,7 +44,37 @@ Hooks.once("init", () => {
 
 Hooks.once("ready", () => {
   game.modules.get(MODULE_ID).api = {
+    /** Abre el panel. `{ fromCombat: true }` precarga el combate en curso. */
     open: (opts) => LensApp.open(opts),
+
+    /**
+     * Analiza sin abrir la interfaz. Útil para macros.
+     * @param {Actor[]} party     actores de tipo `character`
+     * @param {Actor[]|Array<{actor:Actor,count:number}>} monsters
+     * @param {{rounds?:number, localize?:boolean}} options
+     */
+    analyze(party = [], monsters = [], { rounds = 3, localize = true } = {}) {
+      const members = party.map((a) => extractPC(actorToProbe(a)));
+      const foes = monsters.map((m) =>
+        m?.actor
+          ? extractNPC(actorToProbe(m.actor), m.count ?? 1)
+          : extractNPC(actorToProbe(m), 1)
+      );
+      const p = { members };
+      const e = { monsters: foes };
+      const report = analyze(p, e);
+      const plan = planTurns(p, e, { rounds });
+      return localize
+        ? { report: localizeReport(report), plan: localizePlan(plan), raw: { report, plan } }
+        : { report, plan };
+    },
+
+    /** Informe + plan como texto plano, listo para pegar en un journal. */
+    toText(party = [], monsters = [], options = {}) {
+      const { raw } = game.modules.get(MODULE_ID).api.analyze(party, monsters, options);
+      return renderText(raw.report, raw.plan);
+    },
+
     LensApp,
   };
 });

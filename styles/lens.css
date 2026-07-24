@@ -500,3 +500,221 @@
   padding-top: 4px;
   border-top: 1px solid rgba(224, 162, 60, 0.18);
 }
+
+/* =============================================================================
+   v0.3.0 — selector de PNJs, cantidad y encuentros guardados
+   ============================================================================= */
+
+/* --- controles de búsqueda -------------------------------------------------- */
+.ggel-picker {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(224, 162, 60, 0.18);
+}
+
+.ggel-picker-controls,
+.ggel-saved-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 9px;
+}
+
+.ggel-search {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 9px;
+  background: var(--gg-roble-claro);
+  color: var(--gg-pergamino);
+  border: 1px solid rgba(224, 162, 60, 0.35);
+  border-radius: 0;
+  font-family: var(--gg-body);
+  font-size: 0.92rem;
+}
+
+.ggel-search::placeholder {
+  color: var(--gg-tinta-suave);
+  font-style: italic;
+}
+
+.ggel-search:focus {
+  outline: none;
+  border-color: rgba(224, 162, 60, 0.75);
+  box-shadow: 0 0 9px rgba(224, 162, 60, 0.2);
+}
+
+.ggel-folder {
+  flex: 0 0 auto;
+  max-width: 190px;
+  padding: 5px 7px;
+  background: var(--gg-roble-claro);
+  color: var(--gg-pergamino);
+  border: 1px solid rgba(224, 162, 60, 0.35);
+  border-radius: 0;
+  font-family: var(--gg-body);
+}
+
+/* --- lista de resultados ---------------------------------------------------- */
+.ggel-npc-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 230px;
+  overflow-y: auto;
+  border: 1px solid rgba(224, 162, 60, 0.14);
+}
+
+.ggel-npc {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 8px;
+  border-bottom: 1px solid rgba(224, 162, 60, 0.08);
+  transition: background-color 110ms ease;
+}
+
+.ggel-npc:last-child {
+  border-bottom: none;
+}
+
+.ggel-npc:hover {
+  background: rgba(224, 162, 60, 0.08);
+}
+
+.ggel-npc img {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  object-fit: cover;
+  border: 1px solid rgba(224, 162, 60, 0.25);
+  border-radius: 0;
+}
+
+.ggel-npc-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--gg-pergamino);
+  font-size: 0.92rem;
+}
+
+.ggel-npc-folder {
+  flex: 0 0 auto;
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.74rem;
+  font-style: italic;
+  color: var(--gg-tinta-suave);
+}
+
+.ggel-add {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid rgba(224, 162, 60, 0.35);
+  border-radius: 0;
+  color: var(--gg-ambar);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.ggel-add:hover {
+  background: var(--gg-ambar-tenue);
+  box-shadow: 0 0 8px rgba(224, 162, 60, 0.25);
+}
+
+/* --- cantidad --------------------------------------------------------------- */
+.ggel-qty {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+}
+
+.ggel-qty button {
+  width: 19px;
+  height: 19px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid rgba(224, 162, 60, 0.3);
+  border-radius: 0;
+  color: var(--gg-tinta);
+  font-size: 0.86rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ggel-qty button:hover {
+  color: var(--gg-ambar);
+  border-color: rgba(224, 162, 60, 0.65);
+}
+
+.ggel-qty b {
+  min-width: 15px;
+  text-align: center;
+  color: var(--gg-ambar);
+  font-size: 0.9rem;
+}
+
+/* --- encuentros guardados --------------------------------------------------- */
+.ggel-saved {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(224, 162, 60, 0.18);
+}
+
+.ggel-saved-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ggel-chip {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid rgba(224, 162, 60, 0.35);
+  background: var(--gg-roble-claro);
+}
+
+.ggel-chip-load,
+.ggel-chip-del {
+  padding: 3px 9px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  color: var(--gg-tinta);
+  font-family: var(--gg-body);
+  font-size: 0.86rem;
+  cursor: pointer;
+  width: auto;
+}
+
+.ggel-chip-load:hover {
+  color: var(--gg-ambar);
+  background: var(--gg-ambar-tenue);
+}
+
+.ggel-chip-del {
+  padding: 3px 7px;
+  border-left: 1px solid rgba(224, 162, 60, 0.22);
+  color: var(--gg-tinta-suave);
+}
+
+.ggel-chip-del:hover {
+  color: var(--gg-vino);
+  background: rgba(138, 47, 63, 0.2);
+}
+
+/* Los monstruos ya elegidos se distinguen del buscador de abajo. */
+.ggel-chosen .ggel-card.is-monster {
+  border-color: rgba(224, 162, 60, 0.4);
+}

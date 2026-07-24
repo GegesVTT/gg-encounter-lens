@@ -58,6 +58,24 @@ function readSave(act, fallbackDC) {
   return { ability, dc: flat || fallbackDC || 0 };
 }
 
+// En dnd5e el daño base de un arma incluye el modificador de característica,
+// que NO vive en las partes de daño: hay que resolverlo aparte. Sin esto, el
+// Life Drain de una aparición daba 18 en vez de los 21 del stat block.
+function attackAbility(item, act, sys) {
+  const explicit = act?.attack?.ability;
+  if (explicit) return explicit;
+
+  const raw = item?.system?.properties;
+  const props = Array.isArray(raw) ? raw : raw ? [...raw] : [];
+  if (props.includes("fin")) {
+    // Sutileza: se usa la mejor de las dos, como hace el sistema.
+    const str = abilityMod(sys?.abilities?.str?.value);
+    const dex = abilityMod(sys?.abilities?.dex?.value);
+    return dex > str ? "dex" : "str";
+  }
+  return act?.attack?.type?.value === "ranged" ? "dex" : "str";
+}
+
 const isRangedRange = (r) =>
   r && r.units && !["self", "touch", ""].includes(r.units) && num(r.value) > 5;
 
@@ -87,6 +105,83 @@ function readUses(item, act) {
   }
   const max = num(uses?.max);
   return max > 0 ? { type: "limited", max } : null;
+}
+
+// --- Multiataque -------------------------------------------------------------
+// dnd5e NO guarda el multiataque de forma estructurada: la rutina vive en la
+// prosa ("makes three attacks: one with its bite and two with its claws").
+// Detectarlo por el nombre "Multiattack" rompe en mundos en español, así que
+// usamos la FORMA, que es agnóstica del idioma:
+//   1. es un rasgo de monstruo (type.value === "monster"),
+//   2. no tiene mecánica propia (ni ataque, ni salvación, ni daño), y
+//   3. su descripción nombra dos o más de los ataques del propio monstruo.
+// El punto 3 funciona en cualquier idioma porque los nombres de los ataques y
+// la descripción vienen siempre en el mismo idioma que el stat block.
+
+const NUMBER_WORDS = {
+  one: 1, two: 2, three: 3, four: 4, five: 5, six: 6,
+  un: 1, uno: 1, una: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6,
+  une: 1, deux: 2, trois: 3, quatre: 4, cinq: 5,
+  ein: 1, eine: 1, zwei: 2, drei: 3, vier: 4, fuenf: 5,
+};
+
+const stripHtml = (s) => String(s ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ");
+
+const fold = (s) =>
+  String(s ?? "").normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+
+/** Cuántas veces se hace ese ataque, leyendo el número que lo precede. */
+function countBefore(text, index) {
+  const window = text.slice(Math.max(0, index - 40), index);
+  const tokens = window.match(/[\p{L}\d]+/gu) ?? [];
+  for (let i = tokens.length - 1; i >= 0; i--) {
+    const tk = tokens[i];
+    if (/^\d+$/.test(tk)) {
+      const n = Number(tk);
+      if (n >= 1 && n <= 6) return n;
+    }
+    if (tk in NUMBER_WORDS) return NUMBER_WORDS[tk];
+  }
+  return 1;
+}
+
+function detectMultiattack(items, attacks) {
+  if (attacks.length < 1) return null;
+
+  for (const it of items) {
+    if (it.type !== "feat") continue;
+    if (it.system?.type?.value !== "monster") continue;
+
+    const acts = Object.values(it.system?.activities ?? {});
+    const hasOwnMechanics = acts.some(
+      (a) => a?.type === "attack" || a?.save || (a?.damage?.parts ?? []).length
+    );
+    if (hasOwnMechanics) continue;
+
+    const text = fold(stripHtml(it.system?.description?.value));
+    if (!text) continue;
+
+    const parts = [];
+    for (const at of attacks) {
+      // Nombres muy cortos generan falsos positivos contra texto corrido.
+      if (at.name.length < 4) continue;
+      const idx = text.indexOf(fold(at.name));
+      if (idx < 0) continue;
+      parts.push({ name: at.name, count: countBefore(text, idx), attack: at });
+    }
+
+    if (parts.length >= 2) {
+      const avgDamage = parts.reduce((a, p) => a + p.count * p.attack.avgDamage, 0);
+      const toHit = Math.max(...parts.map((p) => p.attack.toHit ?? 0));
+      return {
+        name: it.name,
+        parts: parts.map(({ name, count }) => ({ name, count })),
+        avgDamage: Math.round(avgDamage * 10) / 10,
+        toHit,
+      };
+    }
+  }
+  return null;
 }
 
 // =============================================================================
@@ -215,9 +310,16 @@ export function extractNPC(actor, count = 1) {
       if (activation === "passive") continue; // rasgo, no movida
 
       const parts = damageParts(it, act);
-      const avgDamage = parts.reduce((a, p) => a + (avgOfPart(p) ?? 0), 0);
+      let avgDamage = parts.reduce((a, p) => a + (avgOfPart(p) ?? 0), 0);
       const sv = readSave(act, fallbackDC);
       const isAttack = act?.type === "attack";
+      const ab = isAttack ? attackAbility(it, act, sys) : null;
+
+      // El modificador solo entra en el daño base del arma, no en las partes
+      // extra (venenos, daño mágico adicional), que van sueltas.
+      if (isAttack && act?.damage?.includeBase && it.type === "weapon") {
+        avgDamage += abilityMod(sys.abilities?.[ab]?.value);
+      }
       if (!isAttack && !sv && avgDamage <= 0) continue;
 
       merged ??= {
@@ -237,7 +339,6 @@ export function extractNPC(actor, count = 1) {
       for (const p of parts) for (const t of p?.types ?? []) merged.damageTypes.add(t);
 
       if (isAttack) {
-        const ab = act.attack?.ability || "str";
         merged.kind = "attack";
         merged.toHit = act.attack?.flat
           ? num(act.attack?.bonus)
@@ -274,6 +375,26 @@ export function extractNPC(actor, count = 1) {
     }
   }
 
+  // El multiataque es lo que el bicho hace CADA ronda; se agrega como movida
+  // sintética con el daño sumado para que el planificador lo prefiera sobre un
+  // ataque suelto, y se marca para que no lo penalice la regla de repetición.
+  const multiattack = detectMultiattack(actor.items ?? [], attacks);
+  if (multiattack) {
+    moves.push({
+      name: multiattack.name,
+      kind: "attack",
+      activation: "action",
+      avgDamage: multiattack.avgDamage,
+      damageTypes: [],
+      toHit: multiattack.toHit,
+      ability: null,
+      dc: null,
+      uses: null,
+      routine: multiattack.parts,
+      alwaysAvailable: true,
+    });
+  }
+
   return {
     name: actor.name,
     cr,
@@ -282,9 +403,13 @@ export function extractNPC(actor, count = 1) {
     immune: sys.traits?.di?.value ?? [],
     vulnerable: sys.traits?.dv?.value ?? [],
     conditionImmune: sys.traits?.ci?.value ?? [],
+    multiattack,
     moves,
     saveEffects,
-    attacks,
+    // La lectura defensiva debe medir la ronda completa, no un golpe suelto.
+    attacks: multiattack
+      ? [{ name: multiattack.name, activation: "action", toHit: multiattack.toHit, avgDamage: multiattack.avgDamage }, ...attacks]
+      : attacks,
     ranged,
     fly: num(sys.attributes?.movement?.fly) > 0,
   };

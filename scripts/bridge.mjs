@@ -56,6 +56,45 @@ export function listCharacters() {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
+/**
+ * Todos los PNJ del mundo, con su carpeta y VD, para el selector.
+ * `search` viene sin acentos y en minúsculas para que "aparicion" encuentre
+ * "Aparición": en un mundo en español, filtrar por acentos es inusable.
+ */
+export function listNPCs() {
+  return game.actors
+    .filter((a) => a.type === "npc" && a.testUserPermission(game.user, "OBSERVER"))
+    .map((a) => ({
+      id: a.id,
+      name: a.name,
+      img: a.img,
+      cr: a.system?.details?.cr ?? null,
+      folder: a.folder?.name ?? null,
+      folderId: a.folder?.id ?? "",
+      search: foldAccents(a.name),
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** Carpetas que efectivamente contienen PNJs, ordenadas alfabéticamente. */
+export function listNPCFolders(npcs) {
+  const seen = new Map();
+  for (const n of npcs) {
+    if (n.folderId && !seen.has(n.folderId)) seen.set(n.folderId, n.folder);
+  }
+  return [...seen.entries()]
+    .map(([id, name]) => ({ id, name }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** Quita acentos y pasa a minúsculas para búsquedas tolerantes. */
+export function foldAccents(s) {
+  return (s ?? "")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+}
+
 /** Agrupa actores repetidos en { actorId, name, count }. */
 function tally(actors) {
   const map = new Map();

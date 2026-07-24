@@ -50,7 +50,7 @@
           <i class="fa-solid fa-crosshairs"></i> {{localize "GGEL.ui.useSelected"}}
         </button>
         <button type="button" class="ggel-btn ggel-btn-ghost" data-action="fromCombat">
-          <i class="fa-solid fa-swords"></i> {{localize "GGEL.ui.useCombat"}}
+          <i class="fa-solid fa-khanda"></i> {{localize "GGEL.ui.useCombat"}}
         </button>
         {{#if hasEncounter}}
           <button type="button" class="ggel-btn ggel-btn-ghost" data-action="clearEncounter">
@@ -61,16 +61,23 @@
     </div>
     <p class="ggel-hint">{{localize "GGEL.ui.encounterHint"}}</p>
 
+    {{!-- Monstruos ya cargados, con control de cantidad --}}
     {{#if monsters.length}}
-      <ul class="ggel-grid">
+      <ul class="ggel-grid ggel-chosen">
         {{#each monsters}}
           <li class="ggel-card is-monster" data-tooltip="{{this.name}}">
             <img src="{{this.img}}" alt="" loading="lazy">
             <span class="ggel-card-name">{{this.name}}</span>
-            <span class="ggel-tag">{{localize "GGEL.ui.count" count=this.count}}</span>
             {{#if this.cr}}
               <span class="ggel-tag ggel-tag-cr">{{localize "GGEL.ui.cr" cr=this.cr}}</span>
             {{/if}}
+            <span class="ggel-qty">
+              <button type="button" data-action="bumpCount" data-actor-id="{{this.actorId}}"
+                      data-delta="-1" data-tooltip="{{localize 'GGEL.ui.less'}}">−</button>
+              <b>{{this.count}}</b>
+              <button type="button" data-action="bumpCount" data-actor-id="{{this.actorId}}"
+                      data-delta="1" data-tooltip="{{localize 'GGEL.ui.more'}}">+</button>
+            </span>
             <button type="button" class="ggel-remove" data-action="removeMonster"
                     data-actor-id="{{this.actorId}}" data-tooltip="{{localize 'GGEL.ui.remove'}}">
               <i class="fa-solid fa-xmark"></i>
@@ -81,6 +88,69 @@
     {{else}}
       <p class="ggel-empty">{{localize "GGEL.ui.emptyEncounter"}}</p>
     {{/if}}
+
+    {{!-- Buscador de PNJs del mundo --}}
+    <div class="ggel-picker">
+      <div class="ggel-picker-controls">
+        <input type="search" data-npc-search class="ggel-search"
+               placeholder="{{localize 'GGEL.ui.searchNpc'}}" autocomplete="off">
+        <select data-npc-folder class="ggel-folder">
+          <option value="">{{localize "GGEL.ui.allFolders"}}</option>
+          {{#each folders}}
+            <option value="{{this.id}}">{{this.name}}</option>
+          {{/each}}
+        </select>
+      </div>
+
+      <ul class="ggel-npc-list">
+        {{#each npcs}}
+          <li class="ggel-npc" data-npc-row data-search="{{this.search}}" data-folder="{{this.folderId}}">
+            <img src="{{this.img}}" alt="" loading="lazy">
+            <span class="ggel-npc-name">{{this.name}}</span>
+            {{#if this.folder}}<span class="ggel-npc-folder">{{this.folder}}</span>{{/if}}
+            {{#if this.cr}}
+              <span class="ggel-tag ggel-tag-cr">{{localize "GGEL.ui.cr" cr=this.cr}}</span>
+            {{/if}}
+            <button type="button" class="ggel-add" data-action="addNpc"
+                    data-actor-id="{{this.id}}" data-tooltip="{{localize 'GGEL.ui.add'}}">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </li>
+        {{/each}}
+      </ul>
+      <p class="ggel-empty" data-npc-empty hidden>{{localize "GGEL.ui.noMatches"}}</p>
+      {{#if npcCapped}}
+        <p class="ggel-hint">{{localize "GGEL.ui.capped" total=npcTotal}}</p>
+      {{/if}}
+    </div>
+
+    {{!-- Encuentros guardados --}}
+    <div class="ggel-saved">
+      <div class="ggel-saved-controls">
+        <input type="text" data-enc-name class="ggel-search"
+               placeholder="{{localize 'GGEL.ui.encName'}}" autocomplete="off">
+        <button type="button" class="ggel-btn ggel-btn-ghost" data-action="saveEncounter">
+          <i class="fa-solid fa-floppy-disk"></i> {{localize "GGEL.ui.save"}}
+        </button>
+      </div>
+
+      {{#if saved.length}}
+        <ul class="ggel-saved-list">
+          {{#each saved}}
+            <li class="ggel-chip">
+              <button type="button" class="ggel-chip-load" data-action="loadEncounter"
+                      data-enc-id="{{this.id}}" data-tooltip="{{localize 'GGEL.ui.load'}}">
+                <i class="fa-solid fa-folder-open"></i> {{this.name}}
+              </button>
+              <button type="button" class="ggel-chip-del" data-action="deleteEncounter"
+                      data-enc-id="{{this.id}}" data-tooltip="{{localize 'GGEL.ui.delete'}}">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </li>
+          {{/each}}
+        </ul>
+      {{/if}}
+    </div>
   </section>
 
   {{!-- ------------------------------ ACCIÓN ----------------------------- --}}
@@ -128,7 +198,6 @@
       <p class="ggel-empty">{{localize "GGEL.ui.emptyReport"}}</p>
     {{/if}}
   </section>
-
 
   {{!-- ---------------------------- PLAN DE COMBATE ---------------------- --}}
   <section class="ggel-panel ggel-plan">
