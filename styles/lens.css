@@ -718,3 +718,17 @@
 .ggel-chosen .ggel-card.is-monster {
   border-color: rgba(224, 162, 60, 0.4);
 }
+
+/* -----------------------------------------------------------------------------
+   Corrección: con el selector de cantidad, la etiqueta de VD y el botón de
+   quitar compitiendo por el ancho, el nombre del monstruo se comprimía hasta
+   una sola letra. Las tarjetas ya elegidas necesitan más aire que las del
+   grupo, y `auto-fit` deja que una sola ocupe la fila completa.
+   ----------------------------------------------------------------------------- */
+.ggel-chosen {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.ggel-chosen .ggel-card-name {
+  min-width: 6em;
+}

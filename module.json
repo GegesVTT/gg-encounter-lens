@@ -2,7 +2,7 @@
   "id": "gg-encounter-lens",
   "title": "GG Encounter Lens",
   "description": "Party-aware encounter analysis for D&D 5e. Instead of one difficulty number, it reads your party's real damage types, save spread, reach and defences, cross-references them against the monsters' stat blocks, and hands the GM a plain-language briefing of mismatches: what will hurt them and why. Includes a deterministic round-by-round combat plan with contingencies. Part of the GegesVTT family. — Análisis de encuentros consciente del grupo para D&D 5e: en vez de un número de dificultad, un informe legible de desajustes entre tu party real y los monstruos.",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "authors": [
     {
       "name": "Geges",
@@ -45,7 +45,7 @@
   ],
   "url": "https://github.com/GegesVTT/gg-encounter-lens",
   "manifest": "https://github.com/GegesVTT/gg-encounter-lens/releases/latest/download/module.json",
-  "download": "https://github.com/GegesVTT/gg-encounter-lens/releases/download/v0.3.1/module.zip",
+  "download": "https://github.com/GegesVTT/gg-encounter-lens/releases/download/v0.3.2/module.zip",
   "readme": "https://raw.githubusercontent.com/GegesVTT/gg-encounter-lens/main/README.md",
   "media": [
     {

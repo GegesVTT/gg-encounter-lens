@@ -33,6 +33,12 @@ export const pHit = (toHit, ac) => clamp01((21 - (ac - toHit)) / 20);
 export const pct = (x) => `${Math.round(x * 100)}%`;
 
 const note = (sev, key, data) => ({ sev, key, data });
+
+// Muchas acciones de guarida se llaman con un parrafo entero del stat block
+// ("Pools of water within 90 feet of the aboleth surge..."). En una nota eso
+// tapa el dato que importa: la habilidad y la CD.
+const trimName = (s, max = 42) =>
+  s && s.length > max ? `${s.slice(0, max - 1).trimEnd()}...` : s;
 const list = (xs) => xs.join(", ");
 
 // =============================================================================
@@ -138,7 +144,8 @@ function checkSaveMatchup(party, enc) {
     for (const eff of m.saveEffects ?? []) {
       const g = byAbility.get(eff.ability) ?? { dc: 0, names: [] };
       g.dc = Math.max(g.dc, eff.dc);
-      if (!g.names.includes(eff.name)) g.names.push(eff.name);
+      const label = trimName(eff.name);
+      if (!g.names.includes(label)) g.names.push(label);
       byAbility.set(eff.ability, g);
     }
 

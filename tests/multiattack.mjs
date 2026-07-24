@@ -158,5 +158,37 @@ function dragon({ multiName, description, biteName, clawName }) {
   assert(!d.multiattack, "No marca multiataque en un rasgo que no lo es");
 }
 
+// --- Rutina de un solo ataque repetido (caso Aboleth) ------------------------
+// "The aboleth makes three tentacle attacks": un unico ataque con cuenta. Exigir
+// dos nombres distintos dejaba fuera a media bestiaria y subestimaba la ronda.
+{
+  const d = extractNPC(dragon({
+    multiName: "Multiattack",
+    biteName: "Tentacle",
+    clawName: "Tail",
+    description: "The aboleth makes three tentacle attacks.",
+  }));
+
+  assert(!!d.multiattack, "SOLO-UNO: detecta la rutina");
+  assert(d.multiattack.approximate === false, "SOLO-UNO: la lee exacta, no aproximada");
+  assert(d.multiattack.parts.length === 1, "SOLO-UNO: una sola entrada en la rutina");
+  assert(d.multiattack.parts[0].count === 3, "SOLO-UNO: lee 'three tentacle attacks' como 3");
+  const suelto = Math.max(...d.attacks.filter((a) => a.name !== "Multiattack").map((a) => a.avgDamage));
+  assert(d.multiattack.avgDamage > suelto,
+    "SOLO-UNO: la ronda completa pega mas que el mejor golpe suelto");
+}
+
+// Un solo ataque nombrado SIN cuenta no alcanza para dar una rutina por leida.
+{
+  const d = extractNPC(dragon({
+    multiName: "Multiattack",
+    biteName: "Tentacle",
+    clawName: "Tail",
+    description: "The creature attacks with its tentacle.",
+  }));
+  assert(d.multiattack?.approximate === true,
+    "Sin cuenta explicita cae a aproximado, no inventa una rutina");
+}
+
 console.log(`\n${fail === 0 ? "✓ TODO OK" : "✗ HAY FALLOS"} — ${pass} pass / ${fail} fail`);
 process.exit(fail === 0 ? 0 : 1);

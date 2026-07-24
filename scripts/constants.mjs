@@ -6,7 +6,8 @@ export const SETTINGS = {
   ENCOUNTERS: "encounters", // encuentros guardados con nombre (por mundo)
 };
 
-// Tope de resultados renderizados en el selector. Con mundos grandes, pintar
-// cientos de filas con imagen es caro; filtrar en el DOM sobre un subconjunto
-// razonable mantiene la búsqueda instantánea.
-export const NPC_RESULT_CAP = 300;
+// Tope de resultados VISIBLES a la vez en el selector. Se renderizan TODOS los
+// PNJs del mundo (con imagenes diferidas) y el tope se aplica despues de
+// filtrar: recortar antes de buscar dejaria fuera del alcance de la busqueda a
+// todo lo que caiga despues del corte alfabetico.
+export const NPC_RESULT_CAP = 60;

@@ -119,9 +119,7 @@
         {{/each}}
       </ul>
       <p class="ggel-empty" data-npc-empty hidden>{{localize "GGEL.ui.noMatches"}}</p>
-      {{#if npcCapped}}
-        <p class="ggel-hint">{{localize "GGEL.ui.capped" total=npcTotal}}</p>
-      {{/if}}
+      <p class="ggel-hint ggel-npc-count" data-npc-count hidden></p>
     </div>
 
     {{!-- Encuentros guardados --}}

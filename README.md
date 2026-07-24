@@ -28,15 +28,15 @@
 
 **The briefing** — not a difficulty score, a list of things that will actually go wrong:
 
-![Briefing](https://raw.githubusercontent.com/GegesVTT/gg-encounter-lens/main/docs/images/el_briefing.jpg)
+![Briefing](https://raw.githubusercontent.com/GegesVTT/gg-encounter-lens/main/docs/images/screenshot-briefing.jpg)
 
 **The panel** — pick who is at the table, load monsters from the canvas or the combat tracker:
 
-![Panel](https://raw.githubusercontent.com/GegesVTT/gg-encounter-lens/main/docs/images/el_opener.jpg)
+![Panel](https://raw.githubusercontent.com/GegesVTT/gg-encounter-lens/main/docs/images/screenshot-panel.jpg)
 
 **The combat plan** — what each monster does, against whom, and why:
 
-![Combat plan](https://raw.githubusercontent.com/GegesVTT/gg-encounter-lens/main/docs/images/el_combatplan.jpg)
+![Combat plan](https://raw.githubusercontent.com/GegesVTT/gg-encounter-lens/main/docs/images/screenshot-plan.jpg)
 
 ---
 
@@ -48,7 +48,7 @@ Every encounter builder answers the same question: *how hard is this, in XP?* No
 - **Auditable, not oracular** — every save flag shows the character's actual modifier and failure chance (`Bula +3 → 65%`). You can check the maths instead of taking the tool's word for it.
 - **⚔️ Combat plan** — 2 to 5 rounds of suggested monster actions, scored by expected impact against *this* party. Opens with control, closes with damage, respects recharge and limited uses, and keeps legendary and lair actions on their own tracks.
 - **Contingencies** — what to do when the monster is bloodied, when a character drops, and which save to keep leaning on if the fight stalls.
-- **🔎 NPC picker** — search your world's monsters by name (accents optional, so `aparicion` finds *Aparición*), filter by folder, set how many of each. Plan a fight days before a single token touches the canvas.
+- **🔎 NPC picker** — search your world's monsters by name (accents optional, so `aparicion` finds *Aparición*), filter by folder, set how many of each. Search reaches every NPC in the world, not just the first screenful. Plan a fight days before a single token touches the canvas.
 - **💾 Saved encounters** — name an encounter and reload it on game night. Prep on Tuesday, play on Saturday.
 - **Three ways in** — the eye icon in the scene controls (or `Alt+L`), a button in the combat tracker that loads the fight in progress, and the picker itself.
 - **No AI, no API key, no network** — the planner is deterministic and rule-based, so it works offline and gives the same answer twice.
@@ -131,7 +131,7 @@ const text = api.toText(party, foes, { rounds: 4 });
 - **Two paths, one code path.** Exported *PC* JSON stores almost no derived values (`ac:{flat:null}`, `hp.max:null`, no save totals, no level); *NPC* JSON stores everything resolved. The extractor always prefers a derived value and only reconstructs one as a fallback, so inside Foundry there is no estimation at all — and any value that *was* estimated is flagged in the briefing rather than passed off as fact.
 - **Activities are merged per item, not scored individually.** A wraith's Life Drain is one attack roll *plus* a Constitution save on the same action; treating them as rival moves made the planner describe half an action.
 - **`activation.type` separates** actions, bonus actions, legendary actions, lair actions and passive traits. A lair action happens on initiative 20 and a passive trait is not a move at all — the plan would be nonsense without that split.
-- **Multiattack detection degrades in three tiers, never silently.** dnd5e keeps the routine in prose, and matching the word *Multiattack* breaks in a Spanish world. So: (1) if the description names two or more of the monster's own attacks, the routine is read exactly, counts included (`two with its claws` → 2); (2) if it does not — half-translated compendiums often mix `Mordisco` with `Claw` — the feature is still flagged and the monster's weapons are listed so the GM can build the round; (3) only a trait with no relation to its attacks is ignored. A round that hits harder than the tool shows is stated outright rather than quietly under-reported.
+- **Multiattack detection degrades in three tiers, never silently.** dnd5e keeps the routine in prose, and matching the word *Multiattack* breaks in a Spanish world. So: (1) the routine is read exactly when the description names two or more of the monster's own attacks — or a single one repeated with a count, since `three tentacle attacks` is every bit as readable as `two with its claws`; (2) if it does not — half-translated compendiums often mix `Mordisco` with `Claw` — the feature is still flagged and the monster's weapons are listed so the GM can build the round; (3) only a trait with no relation to its attacks is ignored. A round that hits harder than the tool shows is stated outright rather than quietly under-reported.
 - **Recharge is read from all the shapes it takes in the wild** — `uses.recovery`, activity-level uses, and the legacy `system.recharge` written by third-party importers — so a dragon's breath weapon does not come back every round.
 - **A monster that multiattacks is never offered a lone attack** in the plan. Its round is the routine, not one claw.
 - **Ability modifiers are added to base weapon damage.** They do not live in the damage parts, so leaving them out under-counted every attack — a wraith's Life Drain read 18 instead of the stat block's 21.
@@ -170,7 +170,7 @@ Todos los constructores de encuentros responden la misma pregunta: *¿cuán dif�
 - **Auditable, no oracular** — cada marca de salvación muestra el modificador real del personaje y su probabilidad de fallo (`Bula +3 → 65%`). Podés verificar la cuenta en vez de creerle a la herramienta.
 - **⚔️ Plan de combate** — de 2 a 5 rondas de acciones sugeridas, puntuadas por impacto esperado contra *este* grupo. Abre con control, cierra con daño, respeta recargas y usos limitados, y mantiene legendarias y acciones de guarida en sus propios carriles.
 - **Contingencias** — qué hacer cuando el monstruo queda malherido, cuando cae un PJ, y sobre qué salvación insistir si el combate se estanca.
-- **🔎 Selector de PNJs** — buscá los monstruos de tu mundo por nombre (sin acentos también: `aparicion` encuentra *Aparición*), filtrá por carpeta y elegí cuántos de cada uno. Podés armar la pelea días antes de que un token toque el mapa.
+- **🔎 Selector de PNJs** — buscá los monstruos de tu mundo por nombre (sin acentos también: `aparicion` encuentra *Aparición*), filtrá por carpeta y elegí cuántos de cada uno. La búsqueda alcanza a todos los PNJs del mundo, no solo a los primeros que entran en pantalla. Podés armar la pelea días antes de que un token toque el mapa.
 - **💾 Encuentros guardados** — poné nombre a un encuentro y recuperalo el día de la partida. Preparás el martes, jugás el sábado.
 - **Tres vías de entrada** — el ícono del ojo en los controles de escena (o `Alt+L`), un botón en el rastreador de combate que carga la pelea en curso, y el propio selector.
 - **Sin IA, sin clave de API y sin red** — el planificador es determinista y por reglas: funciona offline y da la misma respuesta dos veces.
@@ -253,7 +253,7 @@ const texto = api.toText(grupo, bichos, { rounds: 4 });
 - **Dos caminos, un solo código.** El JSON exportado de un *PJ* casi no guarda valores derivados (`ac:{flat:null}`, `hp.max:null`, sin totales de salvación ni nivel); el de un *PNJ* los guarda todos resueltos. El extractor siempre prefiere el valor derivado y solo reconstruye como fallback, así que dentro de Foundry no hay ninguna estimación — y si algún valor *sí* se estimó, el informe lo avisa en vez de disimularlo.
 - **Las activities se fusionan por ítem, no se puntúan por separado.** El Life Drain de una aparición es una tirada de ataque *más* una salvación de Constitución en la misma acción; tratarlas como movidas rivales hacía que el plan describiera media acción.
 - **`activation.type` separa** acciones, acciones adicionales, legendarias, de guarida y rasgos pasivos. Una acción de guarida ocurre en iniciativa 20 y un rasgo pasivo no es una movida: sin esa distinción el plan sería un disparate.
-- **El multiataque degrada en tres niveles, nunca en silencio.** dnd5e guarda la rutina en prosa, y buscar la palabra *Multiattack* rompe en un mundo en español. Entonces: (1) si la descripción nombra dos o más de sus propios ataques, la rutina se lee exacta, cantidades incluidas (`dos con sus garras` → 2); (2) si no —los compendios a medio traducir mezclan `Mordisco` con `Claw` todo el tiempo—, el rasgo se marca igual y se listan las armas del bicho para que el DM arme la ronda; (3) solo se ignora un rasgo que no tenga relación con sus ataques. Que la ronda real pegue más de lo que muestra la herramienta se dice de frente, no se subestima callando.
+- **El multiataque degrada en tres niveles, nunca en silencio.** dnd5e guarda la rutina en prosa, y buscar la palabra *Multiattack* rompe en un mundo en español. Entonces: (1) la rutina se lee exacta cuando la descripción nombra dos o más de sus propios ataques —o uno solo repetido con cuenta, porque `hace tres ataques con su tentáculo` es tan legible como `dos con sus garras`—; (2) si no —los compendios a medio traducir mezclan `Mordisco` con `Claw` todo el tiempo—, el rasgo se marca igual y se listan las armas del bicho para que el DM arme la ronda; (3) solo se ignora un rasgo que no tenga relación con sus ataques. Que la ronda real pegue más de lo que muestra la herramienta se dice de frente, no se subestima callando.
 - **La recarga se lee en todas las formas que toma en la práctica** — `uses.recovery`, usos a nivel de activity, y el `system.recharge` heredado que escriben los importadores de terceros — para que el aliento de un dragón no vuelva cada ronda.
 - **A un monstruo que multiataca nunca se le ofrece un ataque suelto** en el plan. Su ronda es la rutina, no una garra.
 - **El modificador de característica se suma al daño base del arma.** No vive en las partes de daño, así que omitirlo subcontaba todos los ataques — el Life Drain de una aparición daba 18 en vez de los 21 del stat block.

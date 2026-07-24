@@ -104,10 +104,8 @@ export class LensApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     const chosen = new Set(this.#encounter.map((m) => m.actorId));
     const allNpcs = listNPCs();
-    const npcs = allNpcs
-      .filter((n) => !chosen.has(n.id))
-      .slice(0, NPC_RESULT_CAP)
-      .map((n) => ({ ...n, folderKey: n.folderId || "__none__" }));
+    // Se renderizan todos: el tope se aplica al filtrar, no antes.
+    const npcs = allNpcs.filter((n) => !chosen.has(n.id));
 
     const monsters = this.#encounter.map((m) => {
       const actor = game.actors.get(m.actorId);
@@ -119,7 +117,6 @@ export class LensApp extends HandlebarsApplicationMixin(ApplicationV2) {
       npcs,
       folders: listNPCFolders(allNpcs),
       npcTotal: allNpcs.length,
-      npcCapped: allNpcs.length > NPC_RESULT_CAP,
       monsters,
       saved: this.#savedEncounters(),
       hasParty: this.#party.size > 0,
@@ -172,22 +169,40 @@ export class LensApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this.#applyFilter();
   }
 
-  /** Filtrado puramente visual: sin acentos y por carpeta. */
+  /**
+   * Filtrado puramente visual: sin acentos y por carpeta. Recorre TODAS las
+   * filas y solo muestra las primeras NPC_RESULT_CAP que coinciden, para que la
+   * busqueda alcance a todo el mundo sin pintar cientos de filas a la vez.
+   */
   #applyFilter() {
     const needle = foldAccents(this.#search).trim();
     const folder = this.#folder;
+    let matches = 0;
     let shown = 0;
 
     for (const row of this.element.querySelectorAll("[data-npc-row]")) {
       const okText = !needle || (row.dataset.search ?? "").includes(needle);
       const okFolder = !folder || row.dataset.folder === folder;
-      const visible = okText && okFolder;
-      row.hidden = !visible;
-      if (visible) shown++;
+      if (okText && okFolder) {
+        matches++;
+        const visible = shown < NPC_RESULT_CAP;
+        row.hidden = !visible;
+        if (visible) shown++;
+      } else {
+        row.hidden = true;
+      }
     }
 
     const empty = this.element.querySelector("[data-npc-empty]");
-    if (empty) empty.hidden = shown > 0;
+    if (empty) empty.hidden = matches > 0;
+
+    const counter = this.element.querySelector("[data-npc-count]");
+    if (counter) {
+      counter.hidden = matches <= shown;
+      if (matches > shown) {
+        counter.textContent = t("GGEL.ui.capped", { shown, total: matches });
+      }
+    }
   }
 
   // --- acciones: grupo ------------------------------------------------------

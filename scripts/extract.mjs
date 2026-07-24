@@ -199,8 +199,10 @@ function detectMultiattack(items, attacks) {
       parts.push({ name: at.name, count: countBefore(text, idx), attack: at });
     }
 
-    // NIVEL 1 — rutina legible: la descripción nombra dos o más de sus ataques.
-    if (parts.length >= 2) {
+    // NIVEL 1 — rutina legible. Dos casos valen: que nombre varios ataques
+    // distintos, o UNO SOLO repetido con cuenta ("hace tres ataques con su
+    // tentáculo"). Exigir dos nombres distintos dejaba afuera a media bestiaria.
+    if (parts.length >= 2 || (parts.length === 1 && parts[0].count >= 2)) {
       return {
         name: it.name,
         approximate: false,
