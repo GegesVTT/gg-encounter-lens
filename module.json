@@ -1,13 +1,15 @@
 {
   "id": "gg-encounter-lens",
   "title": "GG Encounter Lens",
-  "description": "Party-aware encounter analysis for D&D 5e. Instead of one difficulty number, it reads your party's real damage types, save spread, reach and defences, cross-references them against the monsters' stat blocks, and hands the GM a plain-language briefing of mismatches: what will hurt them and why. Includes a deterministic round-by-round combat plan with contingencies. Part of the GegesVTT family. — Análisis de encuentros consciente del grupo para D&D 5e: en vez de un número de dificultad, un informe legible de desajustes entre tu party real y los monstruos.",
+  "description": "Party-aware encounter analysis for D&D 5e. Instead of one difficulty number, it reads your party's real damage types, save spread, reach and defences, cross-references them against the monsters' stat blocks, and hands the GM a plain-language briefing of mismatches: what will hurt them and why. Includes a deterministic round-by-round combat plan with contingencies. Part of Crónicas Bárdicas, the module suite by GegesVTT. — Análisis de encuentros consciente del grupo para D&D 5e: en vez de un número de dificultad, un informe legible de desajustes entre tu party real y los monstruos. Parte de Crónicas Bárdicas, la suite de módulos de GegesVTT.",
   "version": "0.3.2",
   "authors": [
     {
       "name": "Geges",
+      "url": "https://github.com/GegesVTT",
       "flags": {
-        "brand": "GegesVTT"
+        "brand": "GegesVTT",
+        "suite": "Crónicas Bárdicas"
       }
     }
   ],
@@ -20,7 +22,10 @@
       {
         "id": "dnd5e",
         "type": "system",
-        "compatibility": {}
+        "compatibility": {
+          "minimum": "5.0.0",
+          "verified": "5.2.4"
+        }
       }
     ]
   },
@@ -47,17 +52,18 @@
   "manifest": "https://github.com/GegesVTT/gg-encounter-lens/releases/latest/download/module.json",
   "download": "https://github.com/GegesVTT/gg-encounter-lens/releases/download/v0.3.2/module.zip",
   "readme": "https://raw.githubusercontent.com/GegesVTT/gg-encounter-lens/main/README.md",
+  "bugs": "https://github.com/GegesVTT/gg-encounter-lens/issues",
+  "changelog": "https://github.com/GegesVTT/gg-encounter-lens/releases",
+  "license": "MIT",
   "media": [
     {
       "type": "cover",
       "url": "https://raw.githubusercontent.com/GegesVTT/gg-encounter-lens/main/docs/images/cover.png",
-      "caption": "GG Encounter Lens — GegesVTT"
+      "caption": "GG Encounter Lens — Crónicas Bárdicas"
     },
     {
       "type": "icon",
       "url": "https://raw.githubusercontent.com/GegesVTT/gg-encounter-lens/main/docs/images/icon.png"
     }
-  ],
-  "bugs": "https://github.com/GegesVTT/gg-encounter-lens/issues",
-  "changelog": "https://github.com/GegesVTT/gg-encounter-lens/releases"
+  ]
 }
