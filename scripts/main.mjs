@@ -3,6 +3,11 @@
 // Registra ajustes, atajo de teclado y las DOS vías de entrada elegidas:
 //   • botón en los controles de escena (analiza los tokens seleccionados)
 //   • botón en el rastreador de combate (analiza el combate en curso)
+//
+// Integración con la suite (gg-wp): OPCIONAL, por feature-detection.
+//   - Si gg-wp está activo, el botón vive en la sección GGWP · Crónicas Bárdicas
+//     y el módulo se registra como miembro de la suite.
+//   - Si no está, el botón cae a Token Controls, como siempre. Cero dependencia.
 // -----------------------------------------------------------------------------
 
 import { MODULE_ID, SETTINGS } from "./constants.mjs";
@@ -12,6 +17,30 @@ import { actorToProbe } from "./bridge.mjs";
 import { analyze } from "./analyze.mjs";
 import { planTurns } from "./tactics.mjs";
 import { localizeReport, localizePlan, renderText, t } from "./i18n.mjs";
+
+/* ── Suite Crónicas Bárdicas (gg-wp) ─────────────────────────────────────────
+   API sincrónica si el módulo está activo; null si no. Se consulta en cada
+   render de los controles porque getSceneControlButtons puede correr antes
+   de que gg-wp emita su hook ready. */
+function ggwpApi() {
+  const m = game.modules.get("gg-wp");
+  return (m?.active && m.api) ? m.api : null;
+}
+
+Hooks.once("gg-wp.ready", (api) => {
+  // Membresía explícita en la suite (el diálogo "Acerca de" lista esto).
+  api.registerModule(MODULE_ID);
+  // El botón de la sección GGWP. gg-wp le garantiza onChange y el guard de
+  // activación (no se dispara al entrar a la sección, solo con clic real).
+  api.registerTool({
+    name: "gg-encounter-lens",
+    title: t("GGEL.tool"),
+    icon: "fa-solid fa-eye",
+    order: 20,
+    button: true,
+    onChange: () => LensApp.open()
+  });
+});
 
 Hooks.once("init", () => {
   // Selección de grupo: por cliente y oculta (se maneja desde el panel).
@@ -80,10 +109,13 @@ Hooks.once("ready", () => {
 });
 
 // --- Botón en los controles de escena ----------------------------------------
+// Con gg-wp activo, el botón vive en la sección GGWP (lo registró el hook
+// gg-wp.ready de arriba) y acá NO se duplica en Token Controls.
+// Sin gg-wp, cae a Token Controls exactamente como antes.
 // v13 entrega `controls` como objeto indexado; v12 lo entregaba como array.
-// Soportamos ambas formas para no romper si el usuario está en una u otra.
 Hooks.on("getSceneControlButtons", (controls) => {
   if (!game.user?.isGM) return;
+  if (ggwpApi()) return; // la sección GGWP ya tiene el botón; no duplicar
 
   const tool = {
     name: "gg-encounter-lens",
@@ -111,6 +143,8 @@ Hooks.on("getSceneControlButtons", (controls) => {
 // --- Botón en el rastreador de combate ---------------------------------------
 // En v13 el CombatTracker es ApplicationV2 y el hook entrega un HTMLElement;
 // en v12 entregaba jQuery. Normalizamos antes de tocar el DOM.
+// Esta vía de entrada NO depende de gg-wp: analizar el combate en curso desde
+// el tracker es útil esté la suite o no.
 Hooks.on("renderCombatTracker", (app, html) => {
   if (!game.user?.isGM) return;
 
