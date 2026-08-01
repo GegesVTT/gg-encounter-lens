@@ -154,7 +154,7 @@ encounter builder · encounter balance · encounter analysis · combat planner �
 
 MIT — © Geges
 
-Part of the **GegesVTT** family: [GG Sheet Export](https://github.com/GegesVTT/gg-sheet-export) · [GG Nameforge](https://github.com/GegesVTT/gg-nameforge) · [GG Calendar](https://github.com/GegesVTT/gg-calendar)
+Part of **Crónicas Bárdicas**, the Foundry VTT module suite by Geges (Gonzalo Gesualdo): [GG Sheet Export](https://github.com/GegesVTT/gg-sheet-export) · [GG Nameforge](https://github.com/GegesVTT/gg-nameforge)
 
 ---
 
@@ -276,7 +276,7 @@ constructor de encuentros · balance de encuentros · análisis de encuentros ·
 
 MIT — © Geges
 
-Parte de la familia **GegesVTT**: [GG Sheet Export](https://github.com/GegesVTT/gg-sheet-export) · [GG Nameforge](https://github.com/GegesVTT/gg-nameforge) · [GG Calendar](https://github.com/GegesVTT/gg-calendar)
+Parte de **Crónicas Bárdicas**, la suite de módulos para Foundry VTT de Geges (Gonzalo Gesualdo): [GG Sheet Export](https://github.com/GegesVTT/gg-sheet-export) · [GG Nameforge](https://github.com/GegesVTT/gg-nameforge)
 
 ---
 
